@@ -1,0 +1,6 @@
+dist/*
+.code-climate
+.coverage
+bin/*
+.git-rm-branch.yml
+.envrc

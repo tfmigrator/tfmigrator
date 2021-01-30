@@ -1,0 +1,12 @@
+---
+linters:
+  enable-all: true
+  disable:
+  - wsl
+  - goerr113
+  - lll
+  - godot
+  - nlreturn
+  - godox
+  - golint
+  - exhaustivestruct # https://github.com/mbilski/exhaustivestruct

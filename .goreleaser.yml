@@ -1,0 +1,12 @@
+---
+builds:
+- binary: tfmigrator
+  main: cmd/tfmigrator/main.go
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - windows
+  - darwin
+  - linux
+  goarch:
+  - amd64
