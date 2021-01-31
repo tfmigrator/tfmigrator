@@ -30,7 +30,7 @@ Go's [text/template](https://golang.org/pkg/text/template/)
 The output of `terraform state -json` is passed.
 
 path | type | example | description
---- | --- | example | ---
+--- | --- | --- | ---
 .Name | string | `foo` | Terraform resource name
 .Address | string | `aws_iam_user.foo` | Terraform resource address
 .Type | string | `null_resource` | Terraform resource type
