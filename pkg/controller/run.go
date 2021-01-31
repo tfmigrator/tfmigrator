@@ -93,6 +93,11 @@ func (ctrl *Controller) handleItem(
 	if !matched {
 		return false, nil
 	}
+
+	if item.Exclude {
+		return true, nil
+	}
+
 	resourcePath, err := getResourcePath(rsc)
 	if err != nil {
 		return true, err
