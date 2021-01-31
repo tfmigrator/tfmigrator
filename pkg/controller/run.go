@@ -8,8 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-
-	"gopkg.in/yaml.v2"
 )
 
 func (ctrl *Controller) Run(ctx context.Context, param Param) error {
@@ -43,6 +41,13 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 			return err
 		}
 		item.CompiledRule = cr
+		if item.ResourceName != "" {
+			crpc, err := ctrl.ResourcePathComputer.Compile(item.ResourceName)
+			if err != nil {
+				return err
+			}
+			item.CompiledResourceName = crpc
+		}
 		param.Items[i] = item
 	}
 
@@ -90,18 +95,6 @@ func (ctrl *Controller) writeTF() (string, error) {
 	return f.Name(), nil
 }
 
-func (ctrl *Controller) readConfig(param Param, cfg *Config) error {
-	cfgFile, err := os.Open(param.ConfigFilePath)
-	if err != nil {
-		return fmt.Errorf("open a configuration file %s: %w", param.ConfigFilePath, err)
-	}
-	defer cfgFile.Close()
-	if err := yaml.NewDecoder(cfgFile).Decode(&cfg); err != nil {
-		return fmt.Errorf("parse a configuration file as YAML %s: %w", param.ConfigFilePath, err)
-	}
-	return nil
-}
-
 type ResourcePath struct {
 	Type string
 	Name string
@@ -147,11 +140,7 @@ func (ctrl *Controller) handleItem(
 	newResourcePath := resourcePath
 	if item.ResourceName != "" {
 		// compute new resource path
-		crpc, err := ctrl.ResourcePathComputer.Compile(item.ResourceName)
-		if err != nil {
-			return true, err
-		}
-		newResourcePath.Name, err = crpc.Parse(rsc)
+		newResourcePath.Name, err = item.CompiledResourceName.Parse(rsc)
 		if err != nil {
 			return true, err
 		}
