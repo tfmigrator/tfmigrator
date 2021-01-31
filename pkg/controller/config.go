@@ -33,8 +33,8 @@ type RootModule struct {
 }
 
 type Resource struct {
-	Adress string                 `json:"address"`
-	Type   string                 `json:"type"`
-	Name   string                 `json:"name"`
-	Values map[string]interface{} `json:"values"`
+	Address string                 `json:"address"`
+	Type    string                 `json:"type"`
+	Name    string                 `json:"name"`
+	Values  map[string]interface{} `json:"values"`
 }
