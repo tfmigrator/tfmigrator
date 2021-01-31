@@ -1,20 +1,14 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/suzuki-shunsuke/tfmigrator/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
-func (runner *Runner) setCLIArg(c *cli.Context, param controller.Param) (controller.Param, error) {
-	args := c.Args()
-	if args.Len() != 1 {
-		return controller.Param{}, errors.New(`one arguments are required.
-Usage: tfmigrator run <file path to Terraform State>`)
-	}
-	param.StatePath = args.First()
+func (runner *Runner) setCLIArg(c *cli.Context, param controller.Param) (controller.Param, error) { //nolint:unparam
+	param.StatePath = c.String("state")
 	if logLevel := c.String("log-level"); logLevel != "" {
 		param.LogLevel = logLevel
 	}

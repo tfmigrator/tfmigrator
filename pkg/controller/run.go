@@ -13,38 +13,28 @@ import (
 )
 
 func (ctrl *Controller) Run(ctx context.Context, param Param) error {
-	// read and validate parameter
-	cfgFile, err := os.Open(param.ConfigFilePath)
-	if err != nil {
-		return fmt.Errorf("open a configuration file %s: %w", param.ConfigFilePath, err)
-	}
-	defer cfgFile.Close()
 	cfg := Config{}
-	if err := yaml.NewDecoder(cfgFile).Decode(&cfg); err != nil {
-		return fmt.Errorf("parse a configuration file as YAML %s: %w", param.ConfigFilePath, err)
+	if err := ctrl.readConfig(param, &cfg); err != nil {
+		return err
 	}
 	param.Items = cfg.Items
-	// read config
-	// read resource from state
-	stateFile, err := os.Open(param.StatePath)
-	if err != nil {
-		return fmt.Errorf("open a state file %s: %w", param.StatePath, err)
-	}
-	defer stateFile.Close()
 	state := State{}
-	if err := json.NewDecoder(stateFile).Decode(&state); err != nil {
-		return fmt.Errorf("parse a state file as JSON %s: %w", param.StatePath, err)
+	if param.StatePath != "" {
+		if err := ctrl.readState(param.StatePath, &state); err != nil {
+			return err
+		}
+	} else {
+		if err := ctrl.readStateFromCmd(ctx, &state); err != nil {
+			return err
+		}
 	}
 
-	f, err := ioutil.TempFile("", "")
-	if err != nil {
-		return fmt.Errorf("create a temporal file to write Terraform configuration (.tf): %w", err)
+	tfPath, err := ctrl.writeTF()
+	if tfPath != "" {
+		defer os.Remove(tfPath)
 	}
-	defer f.Close()
-	defer os.Remove(f.Name())
-	// read tf from stdin and write a temporal file
-	if _, err := io.Copy(f, ctrl.Stdin); err != nil {
-		return fmt.Errorf("write standard input to a temporal file %s: %w", f.Name(), err)
+	if err != nil {
+		return err
 	}
 
 	for i, item := range param.Items {
@@ -57,9 +47,57 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 	}
 
 	for _, rsc := range state.Values.RootModule.Resources {
-		if err := ctrl.handleResource(ctx, param, rsc, f.Name()); err != nil {
+		if err := ctrl.handleResource(ctx, param, rsc, tfPath); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (ctrl *Controller) readState(statePath string, state *State) error {
+	stateFile, err := os.Open(statePath)
+	if err != nil {
+		return fmt.Errorf("open a state file %s: %w", statePath, err)
+	}
+	defer stateFile.Close()
+	if err := json.NewDecoder(stateFile).Decode(state); err != nil {
+		return fmt.Errorf("parse a state file as JSON %s: %w", statePath, err)
+	}
+	return nil
+}
+
+func (ctrl *Controller) readStateFromCmd(ctx context.Context, state *State) error {
+	buf := bytes.Buffer{}
+	if err := ctrl.tfShow(ctx, &buf); err != nil {
+		return err
+	}
+	if err := json.NewDecoder(&buf).Decode(state); err != nil {
+		return fmt.Errorf("parse a state as JSON: %w", err)
+	}
+	return nil
+}
+
+func (ctrl *Controller) writeTF() (string, error) {
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		return "", fmt.Errorf("create a temporal file to write Terraform configuration (.tf): %w", err)
+	}
+	defer f.Close()
+	// read tf from stdin and write a temporal file
+	if _, err := io.Copy(f, ctrl.Stdin); err != nil {
+		return f.Name(), fmt.Errorf("write standard input to a temporal file %s: %w", f.Name(), err)
+	}
+	return f.Name(), nil
+}
+
+func (ctrl *Controller) readConfig(param Param, cfg *Config) error {
+	cfgFile, err := os.Open(param.ConfigFilePath)
+	if err != nil {
+		return fmt.Errorf("open a configuration file %s: %w", param.ConfigFilePath, err)
+	}
+	defer cfgFile.Close()
+	if err := yaml.NewDecoder(cfgFile).Decode(&cfg); err != nil {
+		return fmt.Errorf("parse a configuration file as YAML %s: %w", param.ConfigFilePath, err)
 	}
 	return nil
 }
