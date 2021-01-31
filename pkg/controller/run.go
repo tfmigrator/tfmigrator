@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -49,7 +47,7 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 		return err
 	}
 
-	for _, rsc := range state.Resources {
+	for _, rsc := range state.Values.RootModule.Resources {
 		if err := ctrl.handleResource(ctx, param, rsc, f.Name()); err != nil {
 			return err
 		}
@@ -154,26 +152,9 @@ func (ctrl *Controller) getHCL(
 	return nil
 }
 
-func getResourcePath(rsc Resource) (ResourcePath, error) {
-	typ, ok := rsc["type"]
-	if !ok {
-		return ResourcePath{}, errors.New("state is invalid: resoruce type isn't found")
-	}
-	t, ok := typ.(string)
-	if !ok {
-		return ResourcePath{}, fmt.Errorf("state is invalid: resoruce type must be a string: %+v", typ)
-	}
-
-	name, ok := rsc["name"]
-	if !ok {
-		return ResourcePath{}, errors.New("state is invalid: resoruce name isn't found")
-	}
-	n, ok := name.(string)
-	if !ok {
-		return ResourcePath{}, fmt.Errorf("state is invalid: resoruce name must be a string: %+v", name)
-	}
+func getResourcePath(rsc Resource) (ResourcePath, error) { //nolint:unparam
 	return ResourcePath{
-		Type: t,
-		Name: n,
+		Type: rsc.Type,
+		Name: rsc.Name,
 	}, nil
 }
