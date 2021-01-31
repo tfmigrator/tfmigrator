@@ -1,4 +1,6 @@
 ---
+archives:
+- name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
 builds:
 - binary: tfmigrator
   main: cmd/tfmigrator/main.go
