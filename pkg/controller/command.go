@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os/exec"
 	"strconv"
@@ -27,7 +28,7 @@ func (ctrl *Controller) stateMv(ctx context.Context, stateOut, oldPath, newPath 
 	}
 	status, err := tioStateMv.RunContext(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("it failed to run a command: %w", err)
 	}
 	if status.Code != 0 {
 		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
@@ -47,7 +48,7 @@ func (ctrl *Controller) blockGet(ctx context.Context, resourcePath string, hclFi
 	}
 	status, err := tio.RunContext(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("it failed to run a command: %w", err)
 	}
 	if status.Code != 0 {
 		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
@@ -67,7 +68,7 @@ func (ctrl *Controller) blockMv(ctx context.Context, newPath, oldPath string, st
 	}
 	status, err := tio.RunContext(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("it failed to run a command: %w", err)
 	}
 	if status.Code != 0 {
 		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))

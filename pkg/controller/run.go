@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,12 +16,12 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 	// read and validate parameter
 	cfgFile, err := os.Open(param.ConfigFilePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("open a configuration file %s: %w", param.ConfigFilePath, err)
 	}
 	defer cfgFile.Close()
 	cfg := Config{}
 	if err := yaml.NewDecoder(cfgFile).Decode(&cfg); err != nil {
-		return err
+		return fmt.Errorf("parse a configuration file as YAML %s: %w", param.ConfigFilePath, err)
 	}
 	param.Items = cfg.Items
 	// read config
@@ -28,23 +29,23 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 	// TODO compile rules in advance
 	stateFile, err := os.Open(param.StatePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("open a state file %s: %w", param.StatePath, err)
 	}
 	defer stateFile.Close()
 	state := State{}
 	if err := json.NewDecoder(stateFile).Decode(&state); err != nil {
-		return err
+		return fmt.Errorf("parse a state file as JSON %s: %w", param.StatePath, err)
 	}
 
 	f, err := ioutil.TempFile("", "")
 	if err != nil {
-		return err
+		return fmt.Errorf("create a temporal file to write Terraform configuration (.tf): %w", err)
 	}
 	defer f.Close()
 	defer os.Remove(f.Name())
 	// read tf from stdin and write a temporal file
 	if _, err := io.Copy(f, ctrl.Stdin); err != nil {
-		return err
+		return fmt.Errorf("write standard input to a temporal file %s: %w", f.Name(), err)
 	}
 
 	for _, rsc := range state.Values.RootModule.Resources {
@@ -116,13 +117,13 @@ func (ctrl *Controller) handleItem(
 	}
 	hclFile, err := os.Open(hclFilePath)
 	if err != nil {
-		return true, err
+		return true, fmt.Errorf("open a Terraform configuration %s: %w", hclFilePath, err)
 	}
 	defer hclFile.Close()
 
 	tfFile, err := os.OpenFile(item.TFPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return true, err
+		return true, fmt.Errorf("open a file which will write Terraform configuration %s: %w", item.TFPath, err)
 	}
 	defer tfFile.Close()
 
@@ -136,7 +137,7 @@ func (ctrl *Controller) handleItem(
 	}
 	// write hcl
 	if _, err := io.Copy(tfFile, &buf); err != nil {
-		return true, err
+		return true, fmt.Errorf("write Terraform configuration to a file %s: %w", item.TFPath, err)
 	}
 	return true, nil
 }
