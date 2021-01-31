@@ -26,7 +26,6 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 	param.Items = cfg.Items
 	// read config
 	// read resource from state
-	// TODO compile rules in advance
 	stateFile, err := os.Open(param.StatePath)
 	if err != nil {
 		return fmt.Errorf("open a state file %s: %w", param.StatePath, err)
@@ -46,6 +45,15 @@ func (ctrl *Controller) Run(ctx context.Context, param Param) error {
 	// read tf from stdin and write a temporal file
 	if _, err := io.Copy(f, ctrl.Stdin); err != nil {
 		return fmt.Errorf("write standard input to a temporal file %s: %w", f.Name(), err)
+	}
+
+	for i, item := range param.Items {
+		cr, err := ctrl.Matcher.Compile(item.Rule)
+		if err != nil {
+			return err
+		}
+		item.CompiledRule = cr
+		param.Items[i] = item
 	}
 
 	for _, rsc := range state.Values.RootModule.Resources {
@@ -81,13 +89,8 @@ func (ctrl *Controller) handleResource(
 
 func (ctrl *Controller) handleItem(
 	ctx context.Context, rsc Resource, item Item, hclFilePath string, skipState bool) (bool, error) {
-	cr, err := ctrl.Matcher.Compile(item.Rule)
-	if err != nil {
-		return false, err
-	}
-
 	// filter resource by condition
-	matched, err := cr.Match(rsc)
+	matched, err := item.CompiledRule.Match(rsc)
 	if err != nil {
 		return false, err
 	}
