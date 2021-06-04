@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/cli"
 )
 
 func main() {
@@ -17,8 +16,8 @@ func main() {
 
 func core() error {
 	ctx := context.Background()
-	runner := &cli.Runner{}
-	if err := runner.Run(ctx, &cli.RunOpt{
+	runner := &tfmigrator.Runner{}
+	if err := runner.Run(ctx, &tfmigrator.RunOpt{
 		Migrator: nil,
 	}); err != nil {
 		return err

@@ -1,4 +1,4 @@
-package cli
+package tfmigrator
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
 	"gopkg.in/yaml.v2"
 )
 
@@ -59,7 +58,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		return err
 	}
 	// read tf files from stdin
-	tfFilePath, err := tfmigrator.WriteTFInTemporalFile(runner.Stdin)
+	tfFilePath, err := WriteTFInTemporalFile(runner.Stdin)
 	if err != nil {
 		return fmt.Errorf("write Terraform Configuration in a temporal file: %w", err)
 	}
@@ -68,21 +67,21 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	stdout := runner.Stdout
 	stderr := runner.Stderr
 
-	state := &tfmigrator.State{}
+	state := &State{}
 	if opt.StatePath == "" {
 		// read state by command
-		if err := tfmigrator.ReadStateByCmd(ctx, &tfmigrator.ReadStateByCmdOpt{
+		if err := ReadStateByCmd(ctx, &ReadStateByCmdOpt{
 			Stderr: stderr,
 		}, state); err != nil {
 			return err
 		}
 	} else {
-		if err := tfmigrator.ReadStateFromFile(opt.StatePath, state); err != nil {
+		if err := ReadStateFromFile(opt.StatePath, state); err != nil {
 			return err
 		}
 	}
 
-	dryRunResult := tfmigrator.DryRunResult{}
+	dryRunResult := DryRunResult{}
 	for _, rsc := range state.Values.RootModule.Resources {
 		migratedResource, err := opt.Migrator.Migrate(&rsc)
 		if err != nil {
@@ -93,7 +92,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 			continue
 		}
 
-		if err := tfmigrator.Migrate(ctx, migratedResource, &tfmigrator.MigrateOpt{
+		if err := Migrate(ctx, migratedResource, &MigrateOpt{
 			Stdin:      stdin,
 			Stderr:     stderr,
 			DryRun:     opt.DryRun,

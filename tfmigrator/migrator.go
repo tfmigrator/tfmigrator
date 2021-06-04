@@ -1,13 +1,11 @@
-package cli
-
-import "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
+package tfmigrator
 
 // Migrator migrates a Terraform resource.
 // Note that Migrator doesn't change Terraform State and Terraform Configuration files.
 // Migrator determines the updated resource name, outputted State file path, and outputted Terraform Configuration file path.
 // If migrator
 type Migrator interface {
-	Migrate(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error)
+	Migrate(rsc *Resource) (*MigratedResource, error)
 }
 
 type combinedMigrator struct {
@@ -21,7 +19,7 @@ func CombineMigrators(migrators ...Migrator) Migrator {
 	}
 }
 
-func (migrator *combinedMigrator) Migrate(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error) {
+func (migrator *combinedMigrator) Migrate(rsc *Resource) (*MigratedResource, error) {
 	for _, m := range migrator.migrators {
 		migratedResource, err := m.Migrate(rsc)
 		if err != nil {
