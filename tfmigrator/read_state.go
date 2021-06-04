@@ -39,7 +39,6 @@ func TFShow(ctx context.Context, opt *TFShowOpt) error {
 }
 
 type ReadStateFromCmdOpt struct {
-	Stdout io.Writer
 	Stderr io.Writer
 }
 

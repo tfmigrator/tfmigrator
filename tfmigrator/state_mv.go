@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"strconv"
 	"time"
@@ -12,15 +13,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) stateMv(ctx context.Context, stateOut, oldPath, newPath string, skipState bool) error {
-	if skipState {
-		logrus.Info("[DRY RUN] terraform state mv -state-out " + stateOut + " " + oldPath + " " + newPath)
+type MoveStateOpt struct {
+	StateOut string
+	Path     string
+	NewPath  string
+	Stderr   io.Writer
+	DryRun   bool
+	Logger   *logrus.Entry
+}
+
+func MoveState(ctx context.Context, opt *MoveStateOpt) error {
+	logger := opt.Logger
+	if logger == nil {
+		logger = logrus.NewEntry(logrus.New())
+	}
+	if opt.DryRun {
+		logger.Info("[DRY RUN] terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
 		return nil
 	}
-	logrus.Info("terraform state mv -state-out " + stateOut + " " + oldPath + " " + newPath)
-	cmd := exec.Command(
-		"terraform", "state", "mv", "-state-out", stateOut, oldPath, newPath)
-	cmd.Stderr = ctrl.Stderr
+	logger.Info("terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+	cmd := exec.Command("terraform", "state", "mv", "-state-out", opt.StateOut, opt.Path, opt.NewPath)
+	cmd.Stderr = opt.Stderr
 	tioStateMv := timeout.Timeout{
 		Cmd:      cmd,
 		Duration: 1 * time.Minute,
