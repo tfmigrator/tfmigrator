@@ -8,6 +8,24 @@ type Migrator interface {
 	Migrate(rsc *Resource) (*MigratedResource, error)
 }
 
+// MigrateFunc migrates a Terraform resource.
+type MigrateFunc func(rsc *Resource) (*MigratedResource, error)
+
+type newMigrator struct {
+	migrate MigrateFunc
+}
+
+// NewMigrator is a helper function to create Migrator from MigrateFunc.
+func NewMigrator(fn MigrateFunc) Migrator {
+	return &newMigrator{
+		migrate: fn,
+	}
+}
+
+func (migrator *newMigrator) Migrate(rsc *Resource) (*MigratedResource, error) {
+	return migrator.migrate(rsc)
+}
+
 type combinedMigrator struct {
 	migrators []Migrator
 }
