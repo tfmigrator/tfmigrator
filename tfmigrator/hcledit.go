@@ -1,17 +1,20 @@
 package tfmigrator
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/minamijoyo/hcledit/editor"
 )
 
 type getBlockOpt struct {
+	// e.g. resource.null_resource.foo
 	Address string
-	File    string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
+	// "-", "foo.tf"
+	File   string
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
 func getBlock(opt *getBlockOpt) error {
@@ -21,7 +24,10 @@ func getBlock(opt *getBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	return client.Edit(opt.File, false, filter)
+	if err := client.Edit(opt.File, false, filter); err != nil {
+		return fmt.Errorf("get a block %s from %s: %w", opt.Address, opt.File, err)
+	}
+	return nil
 }
 
 type moveBlockOpt struct {
@@ -40,5 +46,8 @@ func moveBlock(opt *moveBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	return client.Edit(opt.File, false, filter)
+	if err := client.Edit(opt.File, false, filter); err != nil {
+		return fmt.Errorf("move a block in %s from %s to %s: %w", opt.File, opt.From, opt.To, err)
+	}
+	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os/exec"
 	"strconv"
 	"time"
@@ -20,16 +19,21 @@ type MoveStateOpt struct {
 	NewPath  string
 	Stderr   io.Writer
 	DryRun   bool
+	Logger   Logger
 }
 
 // MoveState runs `terraform state mv`.
 func MoveState(ctx context.Context, opt *MoveStateOpt) error {
 	if opt.DryRun {
-		log.Println("[DRY RUN] terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+		if opt.Logger != nil {
+			opt.Logger.Info("[DRYRUN] + terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+		}
 		return nil
 	}
-	log.Println("terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
-	cmd := exec.Command("terraform", "state", "mv", "-state-out", opt.StateOut, opt.Path, opt.NewPath)
+	if opt.Logger != nil {
+		opt.Logger.Info("+ terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+	}
+	cmd := exec.Command("terraform", "state", "mv", "-state-out", opt.StateOut, opt.Path, opt.NewPath) //nolint:gosec
 	cmd.Stderr = opt.Stderr
 	tioStateMv := timeout.Timeout{
 		Cmd:      cmd,
@@ -37,10 +41,10 @@ func MoveState(ctx context.Context, opt *MoveStateOpt) error {
 	}
 	status, err := tioStateMv.RunContext(ctx)
 	if err != nil {
-		return fmt.Errorf("it failed to run a command: %w", err)
+		return fmt.Errorf("terraform state mv: %w", err)
 	}
 	if status.Code != 0 {
-		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
+		return errors.New("exit code of terraform state mv isn't zero (" + strconv.Itoa(status.Code) + ")")
 	}
 	return nil
 }

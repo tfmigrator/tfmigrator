@@ -46,11 +46,18 @@ type RunOpt struct {
 	Migrator  Migrator
 }
 
+func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *DryRunResult) error {
+	if err := yaml.NewEncoder(stdout).Encode(dryRunResult); err != nil {
+		return fmt.Errorf("output DryRunResult as YAML: %w", err)
+	}
+	return nil
+}
+
 // Run reads Terraform Configuration and State and migrate them.
 func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	runner.SetDefault()
 	if err := runner.validateOpt(opt); err != nil {
-		return err
+		return fmt.Errorf("validate a RunOpt: %w", err)
 	}
 	// read tf files from stdin
 	tfFilePath, err := WriteTFInTemporalFile(runner.Stdin)
@@ -58,7 +65,6 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		return fmt.Errorf("write Terraform Configuration in a temporal file: %w", err)
 	}
 	defer os.Remove(tfFilePath)
-	stdin := runner.Stdin
 	stdout := runner.Stdout
 	stderr := runner.Stderr
 
@@ -68,41 +74,56 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		if err := ReadStateByCmd(ctx, &ReadStateByCmdOpt{
 			Stderr: stderr,
 		}, state); err != nil {
-			return err
+			return fmt.Errorf("read Terraform State by command: %w", err)
 		}
 	} else {
 		if err := ReadStateFromFile(opt.StatePath, state); err != nil {
-			return err
+			return fmt.Errorf("read Terraform State from a file %s: %w", opt.StatePath, err)
 		}
 	}
 
-	dryRunResult := DryRunResult{}
+	dryRunResult := &DryRunResult{}
 	for _, rsc := range state.Values.RootModule.Resources {
-		migratedResource, err := opt.Migrator.Migrate(&rsc)
-		if err != nil {
-			return err
-		}
-		if opt.DryRun {
-			dryRunResult.Add(rsc.Address, migratedResource)
-			continue
-		}
-
-		if err := Migrate(ctx, migratedResource, &MigrateOpt{
-			Stdin:      stdin,
-			Stderr:     stderr,
-			DryRun:     opt.DryRun,
+		rsc := rsc
+		if err := runner.migrateResource(ctx, &rsc, &migrateResourceOpt{
 			TFFilePath: tfFilePath,
-		}); err != nil {
-			return err
+			DryRun:     opt.DryRun,
+			Migrator:   opt.Migrator,
+		}, dryRunResult); err != nil {
+			return fmt.Errorf("migrate a resource %s: %w", rsc.Address, err)
 		}
 	}
 
 	if opt.DryRun {
-		if err := yaml.NewEncoder(stdout).Encode(dryRunResult); err != nil {
-			return err
-		}
+		return runner.dryRun(stdout, dryRunResult)
+	}
+
+	return nil
+}
+
+type migrateResourceOpt struct {
+	TFFilePath string
+	Migrator   Migrator
+	DryRun     bool
+}
+
+func (runner *Runner) migrateResource(ctx context.Context, rsc *Resource, opt *migrateResourceOpt, dryRunResult *DryRunResult) error {
+	migratedResource, err := opt.Migrator.Migrate(rsc)
+	if err != nil {
+		return fmt.Errorf("plan to migrate a resource: %w", err)
+	}
+	if opt.DryRun {
+		dryRunResult.Add(rsc.Address, migratedResource)
 		return nil
 	}
 
+	if err := Migrate(ctx, migratedResource, &MigrateOpt{
+		Stdin:      runner.Stdin,
+		Stderr:     runner.Stderr,
+		DryRun:     opt.DryRun,
+		TFFilePath: opt.TFFilePath,
+	}); err != nil {
+		return fmt.Errorf("migrate a resource: %w", err)
+	}
 	return nil
 }

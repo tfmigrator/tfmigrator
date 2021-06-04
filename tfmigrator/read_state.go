@@ -15,7 +15,7 @@ import (
 	"github.com/Songmu/timeout"
 )
 
-// TFShowOpt is an option of TFShow funciton.
+// TFShowOpt is an option of TFShow function.
 type TFShowOpt struct {
 	Stdout io.Writer
 	Stderr io.Writer

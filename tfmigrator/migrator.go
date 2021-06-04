@@ -1,5 +1,7 @@
 package tfmigrator
 
+import "fmt"
+
 // Migrator migrates a Terraform resource.
 // Note that Migrator doesn't change Terraform State and Terraform Configuration files.
 // Migrator determines the updated resource name, outputted State file path, and outputted Terraform Configuration file path.
@@ -38,10 +40,10 @@ func CombineMigrators(migrators ...Migrator) Migrator {
 }
 
 func (migrator *combinedMigrator) Migrate(rsc *Resource) (*MigratedResource, error) {
-	for _, m := range migrator.migrators {
+	for i, m := range migrator.migrators {
 		migratedResource, err := m.Migrate(rsc)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("plan to migrate a resource by combinedMigrator (%d): %w", i, err)
 		}
 		if migratedResource == nil {
 			continue
