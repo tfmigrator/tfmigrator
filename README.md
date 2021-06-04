@@ -2,6 +2,10 @@
 
 Go library to migrate Terraform Configuration and State with `terraform state mv` command and [hcledit](https://github.com/minamijoyo/hcledit).
 
+## Requirement
+
+* Terraform
+
 ## Relation to tfmigrator
 
 tfmigrator-sdk is Go library. On the other hand, [tfmigrator](https://github.com/suzuki-shunsuke/tfmigrator) is CLI tool.
