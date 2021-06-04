@@ -1,6 +1,7 @@
 package tfmigrator
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -37,26 +38,30 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 	defer tfFile.Close()
 
 	if migratedResource.PathChanged() {
-		if err := moveBlock(&moveBlockOpt{
-			From:   "resource." + migratedResource.SourceResourcePath,
-			To:     "resource." + migratedResource.DestResourcePath,
-			File:   opt.TFFilePath,
-			Stdin:  opt.Stdin,
-			Stdout: tfFile,
-			Stderr: opt.Stderr,
-		}); err != nil {
-			return err
-		}
-	} else {
+		buf := &bytes.Buffer{}
 		if err := getBlock(&getBlockOpt{
 			Address: "resource." + migratedResource.SourceResourcePath,
 			File:    opt.TFFilePath,
 			Stdin:   opt.Stdin,
-			Stdout:  tfFile,
+			Stdout:  buf,
 			Stderr:  opt.Stderr,
 		}); err != nil {
 			return err
 		}
+		return moveBlock(&moveBlockOpt{
+			From:   "resource." + migratedResource.SourceResourcePath,
+			To:     "resource." + migratedResource.DestResourcePath,
+			File:   "-",
+			Stdin:  buf,
+			Stdout: tfFile,
+			Stderr: opt.Stderr,
+		})
 	}
-	return nil
+	return getBlock(&getBlockOpt{
+		Address: "resource." + migratedResource.SourceResourcePath,
+		File:    opt.TFFilePath,
+		Stdin:   opt.Stdin,
+		Stdout:  tfFile,
+		Stderr:  opt.Stderr,
+	})
 }
