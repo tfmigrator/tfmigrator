@@ -7,4 +7,5 @@ require (
 	github.com/hashicorp/hcl/v2 v2.10.0
 	github.com/minamijoyo/hcledit v0.2.0
 	github.com/sirupsen/logrus v1.8.1
+	gopkg.in/yaml.v2 v2.2.7
 )
