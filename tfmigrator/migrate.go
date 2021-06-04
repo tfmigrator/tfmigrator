@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 // MigrateOpt is an option of Migrate function.
 type MigrateOpt struct {
 	Stdin      io.Reader
 	Stderr     io.Writer
-	Logger     *logrus.Entry
 	TFFilePath string
 	DryRun     bool
 }
@@ -27,7 +24,6 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 		NewPath:  migratedResource.DestResourcePath,
 		Stderr:   opt.Stderr,
 		DryRun:   opt.DryRun,
-		Logger:   opt.Logger,
 	}); err != nil {
 		return err
 	}

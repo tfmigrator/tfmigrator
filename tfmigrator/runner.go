@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,7 +15,6 @@ type Runner struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
-	Logger *logrus.Entry
 }
 
 // SetDefault sets the default values to Runner.
@@ -29,9 +27,6 @@ func (runner *Runner) SetDefault() {
 	}
 	if runner.Stderr == nil {
 		runner.Stderr = os.Stderr
-	}
-	if runner.Stderr == nil {
-		runner.Logger = logrus.NewEntry(logrus.New())
 	}
 }
 
@@ -96,7 +91,6 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 			Stdin:      stdin,
 			Stderr:     stderr,
 			DryRun:     opt.DryRun,
-			Logger:     runner.Logger,
 			TFFilePath: tfFilePath,
 		}); err != nil {
 			return err
