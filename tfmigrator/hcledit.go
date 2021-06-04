@@ -1,4 +1,4 @@
-package hcl
+package tfmigrator
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"github.com/minamijoyo/hcledit/editor"
 )
 
-type GetBlockOpt struct {
+type getBlockOpt struct {
 	Address string
 	File    string
 	Stdin   io.Reader
@@ -14,7 +14,7 @@ type GetBlockOpt struct {
 	Stderr  io.Writer
 }
 
-func GetBlock(opt *GetBlockOpt) error {
+func getBlock(opt *getBlockOpt) error {
 	filter := editor.NewBlockGetFilter(opt.Address)
 	client := editor.NewClient(&editor.Option{
 		InStream:  opt.Stdin,
@@ -24,7 +24,7 @@ func GetBlock(opt *GetBlockOpt) error {
 	return client.Edit(opt.File, false, filter)
 }
 
-type MoveBlockOpt struct {
+type moveBlockOpt struct {
 	From   string
 	To     string
 	File   string
@@ -33,7 +33,7 @@ type MoveBlockOpt struct {
 	Stderr io.Writer
 }
 
-func MoveBlock(opt *MoveBlockOpt) error {
+func moveBlock(opt *moveBlockOpt) error {
 	filter := editor.NewBlockRenameFilter(opt.From, opt.To)
 	client := editor.NewClient(&editor.Option{
 		InStream:  opt.Stdin,

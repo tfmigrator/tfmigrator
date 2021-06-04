@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcl"
 )
 
 // MigrateOpt is an option of Migrate function.
@@ -42,7 +41,7 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 	defer tfFile.Close()
 
 	if migratedResource.PathChanged() {
-		if err := hcl.MoveBlock(&hcl.MoveBlockOpt{
+		if err := moveBlock(&moveBlockOpt{
 			From:   "resource." + migratedResource.SourceResourcePath,
 			To:     "resource." + migratedResource.DestResourcePath,
 			File:   opt.TFFilePath,
@@ -53,7 +52,7 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 			return err
 		}
 	} else {
-		if err := hcl.GetBlock(&hcl.GetBlockOpt{
+		if err := getBlock(&getBlockOpt{
 			Address: "resource." + migratedResource.SourceResourcePath,
 			File:    opt.TFFilePath,
 			Stdin:   opt.Stdin,
