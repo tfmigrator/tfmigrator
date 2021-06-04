@@ -1,6 +1,7 @@
 package tfmigrator
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,45 +14,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (ctrl *Controller) stateMv(ctx context.Context, stateOut, oldPath, newPath string, skipState bool) error {
-	if skipState {
-		logrus.Info("[DRY RUN] terraform state mv -state-out " + stateOut + " " + oldPath + " " + newPath)
-		return nil
+func (ctrl *Controller) getHCL(
+	ctx context.Context, resourcePath, newResourcePath string, hclFile io.Reader, buf io.Writer) error {
+	if resourcePath == newResourcePath {
+		return ctrl.blockGet(ctx, "resource."+resourcePath, hclFile, buf)
 	}
-	logrus.Info("terraform state mv -state-out " + stateOut + " " + oldPath + " " + newPath)
-	cmd := exec.Command(
-		"terraform", "state", "mv", "-state-out", stateOut, oldPath, newPath)
-	cmd.Stderr = ctrl.Stderr
-	tioStateMv := timeout.Timeout{
-		Cmd:      cmd,
-		Duration: 1 * time.Minute,
+	pp := bytes.Buffer{}
+	if err := ctrl.blockGet(ctx, "resource."+resourcePath, hclFile, &pp); err != nil {
+		return fmt.Errorf("get a resource from HCL file: %w", err)
 	}
-	status, err := tioStateMv.RunContext(ctx)
-	if err != nil {
-		return fmt.Errorf("it failed to run a command: %w", err)
-	}
-	if status.Code != 0 {
-		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
-	}
-	return nil
-}
 
-func (ctrl *Controller) tfShow(ctx context.Context, out io.Writer) error {
-	logrus.Info("terraform show -json")
-	cmd := exec.Command(
-		"terraform", "show", "-json")
-	cmd.Stdout = out
-	cmd.Stderr = ctrl.Stderr
-	tioStateMv := timeout.Timeout{
-		Cmd:      cmd,
-		Duration: 1 * time.Minute,
-	}
-	status, err := tioStateMv.RunContext(ctx)
-	if err != nil {
-		return fmt.Errorf("it failed to run a command: %w", err)
-	}
-	if status.Code != 0 {
-		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
+	if err := ctrl.blockMv(ctx, "resource."+resourcePath, "resource."+newResourcePath, &pp, buf); err != nil {
+		return fmt.Errorf("rename resource: %w", err)
 	}
 	return nil
 }
