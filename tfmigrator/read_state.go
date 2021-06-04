@@ -15,11 +15,13 @@ import (
 	"github.com/Songmu/timeout"
 )
 
+// TFShowOpt is an option of TFShow funciton.
 type TFShowOpt struct {
 	Stdout io.Writer
 	Stderr io.Writer
 }
 
+// TFShow gets Terraform State by `terraform show -json` command.
 func TFShow(ctx context.Context, opt *TFShowOpt) error {
 	cmd := exec.Command("terraform", "show", "-json")
 	cmd.Stdout = opt.Stdout
@@ -38,10 +40,12 @@ func TFShow(ctx context.Context, opt *TFShowOpt) error {
 	return nil
 }
 
+// ReadStateFromCmdOpt is an option of ReadStateFromCmd function.
 type ReadStateFromCmdOpt struct {
 	Stderr io.Writer
 }
 
+// ReadStateFromCmd reads Terraform State by `terraform show -json` command.
 func ReadStateFromCmd(ctx context.Context, opt *ReadStateFromCmdOpt, state *State) error {
 	buf := &bytes.Buffer{}
 	if err := TFShow(ctx, &TFShowOpt{
@@ -53,6 +57,7 @@ func ReadStateFromCmd(ctx context.Context, opt *ReadStateFromCmdOpt, state *Stat
 	return ReadState(buf, state)
 }
 
+// ReadStateFromFile opens a Terraform State file and reads it into state.
 func ReadStateFromFile(statePath string, state *State) error {
 	stateFile, err := os.Open(statePath)
 	if err != nil {
@@ -62,6 +67,7 @@ func ReadStateFromFile(statePath string, state *State) error {
 	return ReadState(stateFile, state)
 }
 
+// ReadState reads a file into state.
 func ReadState(file io.Reader, state *State) error {
 	if err := json.NewDecoder(file).Decode(state); err != nil {
 		return fmt.Errorf("parse a state file as JSON: %w", err)

@@ -10,6 +10,7 @@ import (
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcl"
 )
 
+// MigrateOpt is an option of Migrate function.
 type MigrateOpt struct {
 	Stdin      io.Reader
 	Stderr     io.Writer
@@ -18,6 +19,7 @@ type MigrateOpt struct {
 	DryRun     bool
 }
 
+// Migrate migrates Terraform Configuration and State with `terraform state mv` and `hcledit`.
 func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *MigrateOpt) error {
 	// terraform state mv
 	if err := MoveState(ctx, &MoveStateOpt{

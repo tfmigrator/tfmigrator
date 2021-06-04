@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 )
 
+// WriteTFInTemporalFile writes Terraform Configuration in a temporal file.
+// In this function, a temporal file is created and the path to the file is returned, so you have to remove the file by yourself.
 func WriteTFInTemporalFile(reader io.Reader) (string, error) {
 	f, err := ioutil.TempFile("", "")
 	if err != nil {

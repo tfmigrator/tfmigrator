@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// MoveStateOpt is an option of MoveState function.
 type MoveStateOpt struct {
 	StateOut string
 	Path     string
@@ -22,6 +23,7 @@ type MoveStateOpt struct {
 	Logger   *logrus.Entry
 }
 
+// MoveState runs `terraform state mv`.
 func MoveState(ctx context.Context, opt *MoveStateOpt) error {
 	logger := opt.Logger
 	if logger == nil {
