@@ -40,13 +40,13 @@ func TFShow(ctx context.Context, opt *TFShowOpt) error {
 	return nil
 }
 
-// ReadStateFromCmdOpt is an option of ReadStateFromCmd function.
-type ReadStateFromCmdOpt struct {
+// ReadStateByCmdOpt is an option of ReadStateByCmd function.
+type ReadStateByCmdOpt struct {
 	Stderr io.Writer
 }
 
-// ReadStateFromCmd reads Terraform State by `terraform show -json` command.
-func ReadStateFromCmd(ctx context.Context, opt *ReadStateFromCmdOpt, state *State) error {
+// ReadStateByCmd reads Terraform State by `terraform show -json` command.
+func ReadStateByCmd(ctx context.Context, opt *ReadStateByCmdOpt, state *State) error {
 	buf := &bytes.Buffer{}
 	if err := TFShow(ctx, &TFShowOpt{
 		Stdout: buf,

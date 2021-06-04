@@ -45,38 +45,6 @@ func (runner *Runner) validateOpt(opt *RunOpt) error {
 	return nil
 }
 
-// Migrator migrates a Terraform resource.
-// Note that Migrator doesn't change Terraform State and Terraform Configuration files.
-// Migrator determines the updated resource name, outputted State file path, and outputted Terraform Configuration file path.
-// If migrator
-type Migrator interface {
-	Migrate(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error)
-}
-
-type combinedMigrator struct {
-	migrators []Migrator
-}
-
-func CombineMigrators(migrators ...Migrator) Migrator {
-	return &combinedMigrator{
-		migrators: migrators,
-	}
-}
-
-func (migrator *combinedMigrator) Migrate(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error) {
-	for _, m := range migrator.migrators {
-		migratedResource, err := m.Migrate(rsc)
-		if err != nil {
-			return nil, err
-		}
-		if migratedResource == nil {
-			continue
-		}
-		return migratedResource, nil
-	}
-	return nil, nil
-}
-
 // RunOpt is an option of Run method.
 type RunOpt struct {
 	StatePath string
@@ -103,7 +71,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	state := &tfmigrator.State{}
 	if opt.StatePath == "" {
 		// read state by command
-		if err := tfmigrator.ReadStateFromCmd(ctx, &tfmigrator.ReadStateFromCmdOpt{
+		if err := tfmigrator.ReadStateByCmd(ctx, &tfmigrator.ReadStateByCmdOpt{
 			Stderr: stderr,
 		}, state); err != nil {
 			return err
