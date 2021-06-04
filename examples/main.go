@@ -3,12 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
-	"gopkg.in/yaml.v2"
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/cli"
 )
 
 func main() {
@@ -19,61 +17,17 @@ func main() {
 
 func core() error {
 	ctx := context.Background()
-	dryRun := false
-	logE := logrus.NewEntry(logrus.New())
-
-	// read tf files from stdin
-	tfFilePath, err := tfmigrator.WriteTFInTemporalFile(os.Stdin)
-	if err != nil {
+	runner := &cli.Runner{}
+	if err := runner.Run(ctx, &cli.RunOpt{
+		Migrator: nil,
+	}); err != nil {
 		return err
 	}
-	defer os.Remove(tfFilePath)
-	stdin := os.Stdin
-	stdout := os.Stdout
-	stderr := os.Stderr
-
-	// read state by command
-	state := &tfmigrator.State{}
-	if err := tfmigrator.ReadStateFromCmd(ctx, &tfmigrator.ReadStateFromCmdOpt{
-		Stderr: stderr,
-	}, state); err != nil {
-		return err
-	}
-
-	dryRunResult := tfmigrator.DryRunResult{}
-	for _, rsc := range state.Values.RootModule.Resources {
-		migratedResource, err := migrateResource(&rsc)
-		if err != nil {
-			return err
-		}
-		if dryRun {
-			dryRunResult.Add(migratedResource)
-			continue
-		}
-
-		if err := tfmigrator.Migrate(ctx, migratedResource, &tfmigrator.MigrateOpt{
-			Stdin:      stdin,
-			Stderr:     stderr,
-			DryRun:     dryRun,
-			Logger:     logE,
-			TFFilePath: tfFilePath,
-		}); err != nil {
-			return err
-		}
-	}
-
-	if dryRun {
-		if err := yaml.NewEncoder(stdout).Encode(dryRunResult); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	return nil
 }
 
 var targets = []Matcher{
-	NewStringMatcher("heroku"),
+	NewStringMatcher("foo"),
 }
 
 type Matcher interface {
@@ -113,12 +67,9 @@ func (m *StringMatcher) Match(rsc *tfmigrator.Resource) (bool, error) {
 	return false, nil
 }
 
-type Target struct {
-	Keys     []string
-	StateDir string
-}
+type Migrator struct{}
 
-func migrateResource(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error) {
+func (migrator *Migrator) Migrate(rsc *tfmigrator.Resource) (*tfmigrator.MigratedResource, error) {
 	for _, target := range targets {
 		f, err := target.Match(rsc)
 		if err != nil {

@@ -5,19 +5,14 @@ import "path/filepath"
 // DryRunResult contains a plan how resources are migrated.
 // By marshaling DryRunResult as YAML, we can check the migration plan in advance.
 type DryRunResult struct {
-	MigratedResources []MigratedResource `yaml:"migrated_resources"`
-	ExcludedResources []string           `yaml:"excluded_resources"`
-	NoMatchResources  []string           `yaml:"no_match_resources"`
+	MigratedResources    []MigratedResource `yaml:"migrated_resources"`
+	NotMigratedResources []string           `yaml:"not_migrated_resources"`
 }
 
 // Add adds a migration plan of a resource to DryRunResult.
-func (result *DryRunResult) Add(rsc *MigratedResource) {
-	if rsc.Exclude {
-		result.ExcludedResources = append(result.ExcludedResources, rsc.SourceResourcePath)
-		return
-	}
-	if rsc.NoMatch {
-		result.NoMatchResources = append(result.NoMatchResources, rsc.SourceResourcePath)
+func (result *DryRunResult) Add(address string, rsc *MigratedResource) {
+	if rsc == nil {
+		result.NotMigratedResources = append(result.NotMigratedResources, address)
 		return
 	}
 	result.MigratedResources = append(result.MigratedResources, *rsc)
@@ -30,8 +25,6 @@ type MigratedResource struct {
 	TFBasename         string `yaml:"tf_basename"`
 	StateDirname       string `yaml:"state_dirname"`
 	StateBasename      string `yaml:"state_basename"`
-	Exclude            bool   `yaml:"-"`
-	NoMatch            bool   `yaml:"-"`
 }
 
 // StatePath returns a file path to Terraform State file.
