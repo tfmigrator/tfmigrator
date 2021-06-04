@@ -1,4 +1,4 @@
-package controller
+package tfmigrator
 
 import (
 	"errors"
