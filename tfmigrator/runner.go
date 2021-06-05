@@ -25,6 +25,7 @@ type Runner struct {
 	StateUpdater *tfstate.Updater
 }
 
+// Validate sets default values and validates runner.
 func (runner *Runner) Validate() error {
 	runner.SetDefault()
 	if err := validate.Struct(runner); err != nil {
@@ -115,17 +116,6 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	}
 
 	return nil
-}
-
-type Source struct {
-	Resource *tfstate.Resource
-	// If the resource isn't found in Terraform Configuration files, TFFilePath is empty
-	TFFilePath string
-	StatePath  string
-}
-
-func (src *Source) Address() string {
-	return src.Resource.Address
 }
 
 func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRunResult *DryRunResult) error {
