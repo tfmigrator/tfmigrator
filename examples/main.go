@@ -83,10 +83,10 @@ func (migrator *Migrator) Migrate(rsc *tfmigrator.Resource) (*tfmigrator.Migrate
 		}
 		if f {
 			return &tfmigrator.MigratedResource{
-				SourceResourcePath: rsc.Address,
-				DestResourcePath:   getDestResourcePath(rsc),
-				TFBasename:         rsc.Type + ".tf",
-				StateDirname:       stateDir,
+				SourceAddress: rsc.Address,
+				DestAddress:   getDestResourcePath(rsc),
+				TFBasename:    rsc.Type + ".tf",
+				StateDirname:  stateDir,
 			}, nil
 		}
 	}

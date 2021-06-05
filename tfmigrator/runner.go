@@ -2,7 +2,6 @@ package tfmigrator
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -30,20 +29,12 @@ func (runner *Runner) SetDefault() {
 	}
 }
 
-var errMigratorIsRequired = errors.New("Migrator is required")
-
-func (runner *Runner) validateOpt(opt *RunOpt) error {
-	if opt.Migrator == nil {
-		return errMigratorIsRequired
-	}
-	return nil
-}
-
 // RunOpt is an option of Run method.
 type RunOpt struct {
-	StatePath string
+	StatePath string   `validate:"required"`
+	TFFiles   []string `validate:"required"`
 	DryRun    bool
-	Migrator  Migrator
+	Migrator  Migrator `validate:"required"`
 }
 
 func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *DryRunResult) error {
@@ -55,16 +46,10 @@ func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *DryRunResult) error
 
 // Run reads Terraform Configuration and State and migrate them.
 func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
+	if err := validate.Struct(opt); err != nil {
+		return fmt.Errorf("validate RunOpt: %w", err)
+	}
 	runner.SetDefault()
-	if err := runner.validateOpt(opt); err != nil {
-		return fmt.Errorf("validate a RunOpt: %w", err)
-	}
-	// read tf files from stdin
-	tfFilePath, err := WriteTFInTemporalFile(runner.Stdin)
-	if err != nil {
-		return fmt.Errorf("write Terraform Configuration in a temporal file: %w", err)
-	}
-	defer os.Remove(tfFilePath)
 	stdout := runner.Stdout
 	stderr := runner.Stderr
 
@@ -82,9 +67,21 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		}
 	}
 
+	addressFileMap, err := listBlockMaps(&listBlockMapsOpt{
+		Files:  opt.TFFiles,
+		Stderr: stderr,
+	})
+	if err != nil {
+		return err
+	}
+
 	dryRunResult := &DryRunResult{}
 	for _, rsc := range state.Values.RootModule.Resources {
 		rsc := rsc
+		tfFilePath, ok := addressFileMap["resource."+rsc.Address]
+		if !ok {
+			continue
+		}
 		if err := runner.migrateResource(ctx, &rsc, &migrateResourceOpt{
 			TFFilePath: tfFilePath,
 			DryRun:     opt.DryRun,
@@ -102,12 +99,16 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 }
 
 type migrateResourceOpt struct {
+	// If the resource isn't found in Terraform Configuration files, TFFilePath is empty
 	TFFilePath string
-	Migrator   Migrator
+	Migrator   Migrator `validate:"required"`
 	DryRun     bool
 }
 
 func (runner *Runner) migrateResource(ctx context.Context, rsc *Resource, opt *migrateResourceOpt, dryRunResult *DryRunResult) error {
+	if err := validate.Struct(opt); err != nil {
+		return fmt.Errorf("validate migrateResourceOpt: %w", err)
+	}
 	migratedResource, err := opt.Migrator.Migrate(rsc)
 	if err != nil {
 		return fmt.Errorf("plan to migrate a resource: %w", err)

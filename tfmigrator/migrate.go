@@ -11,6 +11,7 @@ import (
 // MigrateOpt is an option of Migrate function.
 type MigrateOpt struct {
 	Stdin      io.Reader
+	Stdout     io.Writer
 	Stderr     io.Writer
 	TFFilePath string
 	DryRun     bool
@@ -21,8 +22,8 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 	// terraform state mv
 	if err := MoveState(ctx, &MoveStateOpt{
 		StateOut: migratedResource.StatePath(),
-		Path:     migratedResource.SourceResourcePath,
-		NewPath:  migratedResource.DestResourcePath,
+		Path:     migratedResource.SourceAddress,
+		NewPath:  migratedResource.DestAddress,
 		Stderr:   opt.Stderr,
 		DryRun:   opt.DryRun,
 	}); err != nil {
@@ -30,6 +31,58 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 	}
 
 	// write tf
+	return migrateTF(migratedResource, opt)
+}
+
+func migrateTF(migratedResource *MigratedResource, opt *MigrateOpt) error { //nolint:funlen
+	if migratedResource.AddressChanged() { //nolint:nestif
+		if migratedResource.FileChanged() {
+			buf := &bytes.Buffer{}
+			if err := getBlock(&getBlockOpt{
+				Address: "resource." + migratedResource.SourceAddress,
+				File:    opt.TFFilePath,
+				Stdin:   opt.Stdin,
+				Stdout:  buf,
+				Stderr:  opt.Stderr,
+			}); err != nil {
+				return err
+			}
+
+			tfPath := migratedResource.TFPath()
+			tfFile, err := os.OpenFile(tfPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+			if err != nil {
+				return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfPath, err)
+			}
+			defer tfFile.Close()
+
+			if err := moveBlock(&moveBlockOpt{
+				From:   "resource." + migratedResource.SourceAddress,
+				To:     "resource." + migratedResource.DestAddress,
+				File:   "-",
+				Stdin:  buf,
+				Stdout: tfFile,
+				Stderr: opt.Stderr,
+			}); err != nil {
+				return err
+			}
+			return rmBlock(&rmBlockOpt{
+				Address: "resource." + migratedResource.SourceAddress,
+				File:    opt.TFFilePath,
+				Stdin:   opt.Stdin,
+				Stdout:  opt.Stdout,
+				Stderr:  opt.Stderr,
+			})
+		}
+		return moveBlock(&moveBlockOpt{
+			From:   "resource." + migratedResource.SourceAddress,
+			To:     "resource." + migratedResource.DestAddress,
+			Update: true,
+			File:   migratedResource.TFPath(),
+			Stdout: opt.Stdout,
+			Stderr: opt.Stderr,
+		})
+	}
+
 	tfPath := migratedResource.TFPath()
 	tfFile, err := os.OpenFile(tfPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
@@ -37,31 +90,20 @@ func Migrate(ctx context.Context, migratedResource *MigratedResource, opt *Migra
 	}
 	defer tfFile.Close()
 
-	if migratedResource.PathChanged() {
-		buf := &bytes.Buffer{}
-		if err := getBlock(&getBlockOpt{
-			Address: "resource." + migratedResource.SourceResourcePath,
-			File:    opt.TFFilePath,
-			Stdin:   opt.Stdin,
-			Stdout:  buf,
-			Stderr:  opt.Stderr,
-		}); err != nil {
-			return err
-		}
-		return moveBlock(&moveBlockOpt{
-			From:   "resource." + migratedResource.SourceResourcePath,
-			To:     "resource." + migratedResource.DestResourcePath,
-			File:   "-",
-			Stdin:  buf,
-			Stdout: tfFile,
-			Stderr: opt.Stderr,
-		})
-	}
-	return getBlock(&getBlockOpt{
-		Address: "resource." + migratedResource.SourceResourcePath,
+	if err := getBlock(&getBlockOpt{
+		Address: "resource." + migratedResource.SourceAddress,
 		File:    opt.TFFilePath,
 		Stdin:   opt.Stdin,
 		Stdout:  tfFile,
+		Stderr:  opt.Stderr,
+	}); err != nil {
+		return err
+	}
+	return rmBlock(&rmBlockOpt{
+		Address: "resource." + migratedResource.SourceAddress,
+		File:    opt.TFFilePath,
+		Stdin:   opt.Stdin,
+		Stdout:  opt.Stdout,
 		Stderr:  opt.Stderr,
 	})
 }

@@ -20,11 +20,12 @@ func (result *DryRunResult) Add(address string, rsc *MigratedResource) {
 
 // MigratedResource is a plan how a resource is migrated
 type MigratedResource struct {
-	SourceResourcePath string `yaml:"source_resource_path"`
-	DestResourcePath   string `yaml:"dest_resource_path"`
-	TFBasename         string `yaml:"tf_basename"`
-	StateDirname       string `yaml:"state_dirname"`
-	StateBasename      string `yaml:"state_basename"`
+	SourceAddress string `yaml:"source_address"`
+	DestAddress   string `yaml:"dest_address"`
+	SourceTFPath  string `yaml:"source_tf_path"`
+	TFBasename    string `yaml:"tf_basename"`
+	StateDirname  string `yaml:"state_dirname"`
+	StateBasename string `yaml:"state_basename"`
 }
 
 // StatePath returns a file path to Terraform State file.
@@ -37,7 +38,12 @@ func (rsc *MigratedResource) TFPath() string {
 	return filepath.Join(rsc.StateDirname, rsc.TFBasename)
 }
 
-// PathChanged returns true if the resource path is changed.
-func (rsc *MigratedResource) PathChanged() bool {
-	return rsc.SourceResourcePath != rsc.DestResourcePath
+// AddressChanged returns true if the resource address is changed.
+func (rsc *MigratedResource) AddressChanged() bool {
+	return rsc.SourceAddress != rsc.DestAddress
+}
+
+// FileChanged returns true if the resource file path is changed.
+func (rsc *MigratedResource) FileChanged() bool {
+	return rsc.SourceTFPath != rsc.TFPath()
 }
