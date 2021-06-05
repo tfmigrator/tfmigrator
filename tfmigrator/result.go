@@ -2,9 +2,9 @@ package tfmigrator
 
 import "path/filepath"
 
-// DryRunResult contains a plan how resources are migrated.
-// By marshaling DryRunResult as YAML, we can check the migration plan in advance.
-type DryRunResult struct {
+// Result contains a plan how resources are migrated.
+// By marshaling Result as YAML, we can check the migration plan in advance.
+type Result struct {
 	MigratedResources    []DryRunResource `yaml:"migrated_resources"`
 	RemovedResources     []SourceResource `yaml:"removed_resources"`
 	NotMigratedResources []SourceResource `yaml:"not_migrated_resources"`
@@ -15,8 +15,8 @@ type SourceResource struct {
 	FilePath string `yaml:"file_path,omitempty"`
 }
 
-// Add adds a migration plan of a resource to DryRunResult.
-func (result *DryRunResult) Add(src *Source, rsc *MigratedResource) {
+// Add adds a migration plan of a resource to Result.
+func (result *Result) Add(src *Source, rsc *MigratedResource) {
 	if rsc == nil {
 		result.NotMigratedResources = append(result.NotMigratedResources, SourceResource{
 			Address:  src.Address(),

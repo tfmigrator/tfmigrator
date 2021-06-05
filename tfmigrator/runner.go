@@ -63,9 +63,9 @@ type RunOpt struct {
 	SourceTFFilePaths []string `validate:"required"`
 }
 
-func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *DryRunResult) error {
+func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *Result) error {
 	if err := yaml.NewEncoder(stdout).Encode(dryRunResult); err != nil {
-		return fmt.Errorf("output DryRunResult as YAML: %w", err)
+		return fmt.Errorf("output Result as YAML: %w", err)
 	}
 	return nil
 }
@@ -95,7 +95,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
 
-	dryRunResult := &DryRunResult{}
+	dryRunResult := &Result{}
 	for _, rsc := range state.Values.RootModule.Resources {
 		rsc := rsc
 		tfFilePath, ok := addressFileMap["resource."+rsc.Address]
@@ -118,7 +118,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	return nil
 }
 
-func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRunResult *DryRunResult) error {
+func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRunResult *Result) error {
 	if err := validate.Struct(source); err != nil {
 		return fmt.Errorf("validate Source: %w", err)
 	}
