@@ -11,14 +11,14 @@ import (
 	tflog "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
-// QuickRun provides CLI interface to run tfmigrator quickly.
-func QuickRun(migrator Migrator) {
-	if err := quickRun(migrator); err != nil {
+// QuickRun provides CLI interface to run tfplanner quickly.
+func QuickRun(planner Planner) {
+	if err := quickRun(planner); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func quickRun(migrator Migrator) error {
+func quickRun(planner Planner) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	logger := &tflog.SimpleLogger{}
@@ -33,15 +33,15 @@ func quickRun(migrator Migrator) error {
 	args := flag.Args()
 
 	if help || (len(args) != 0 && args[0] == "help") {
-		fmt.Fprint(os.Stderr, `tfmigrator - Migrate Terraform Configuration and State
+		fmt.Fprint(os.Stderr, `tfplanner - Migrate Terraform Configuration and State
 
 Usage
-  tfmigrator help
-  tfmigrator [-help] [-dry-run] [-log-level debug] [Terraform Configuration file path ...]
+  tfplanner help
+  tfplanner [-help] [-dry-run] [-log-level debug] [Terraform Configuration file path ...]
 
 Example
 
-  $ ls *.tf | xargs tfmigrator -dry-run -log-level debug
+  $ ls *.tf | xargs tfplanner -dry-run -log-level debug
 `)
 		return nil
 	}
@@ -56,9 +56,9 @@ Example
 	}
 
 	runner := &Runner{
-		Logger:   logger,
-		DryRun:   dryRun,
-		Migrator: migrator,
+		Logger:  logger,
+		DryRun:  dryRun,
+		Planner: planner,
 	}
 
 	return runner.Run(ctx, &RunOpt{

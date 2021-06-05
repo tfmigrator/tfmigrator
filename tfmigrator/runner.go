@@ -17,7 +17,7 @@ type Runner struct {
 	Stdin        io.Reader `validate:"required"`
 	Stdout       io.Writer `validate:"required"`
 	Stderr       io.Writer `validate:"required"`
-	Migrator     Migrator  `validate:"required"`
+	Planner      Planner   `validate:"required"`
 	Logger       log.Logger
 	HCLEdit      *hcledit.Client
 	DryRun       bool
@@ -122,7 +122,7 @@ func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRu
 	if err := validate.Struct(source); err != nil {
 		return fmt.Errorf("validate Source: %w", err)
 	}
-	migratedResource, err := runner.Migrator.Migrate(source)
+	migratedResource, err := runner.Planner.Plan(source)
 	if err != nil {
 		return fmt.Errorf("plan to migrate a resource: %w", err)
 	}

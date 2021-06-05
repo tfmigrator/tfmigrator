@@ -21,7 +21,7 @@ But when we migrate a number of resources, it is hard to write YAML.
 So we started to develop tfmigrator-sdk instead of tfmigrator.
 
 tfmigrator-sdk is Go library, so we can implement the migration rules with Go.
-In tfmigrator-sdk, we can migrate Terraform Configuration and State by implementing the interface `Migrator`.
+In tfmigrator-sdk, we can migrate Terraform Configuration and State by implementing the interface `Planner`.
 This is very simple and powerful and flexible.
 And we don't have to configuration file format and expr's Language specification, so the learning cost is low.
 Using `QuickRun` function, we can implement CLI for migration quickly.

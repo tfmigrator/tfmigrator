@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	tfmigrator.QuickRun(tfmigrator.NewMigrator(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
+	tfmigrator.QuickRun(tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
 		if src.Address() == "null_resource.foo" {
 			return &tfmigrator.MigratedResource{
 				Address: "null_resource.bar",
