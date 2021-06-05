@@ -35,7 +35,7 @@ func (result *Result) Add(src *Source, rsc *MigratedResource) {
 		SourceTFFilePath:  src.TFFilePath,
 		NewAddress:        rsc.Address,
 		NewTFFileBasename: rsc.TFFileBasename,
-		StateDirname:      rsc.StateDirname,
+		Dirname:           rsc.Dirname,
 		StateBasename:     rsc.StateBasename,
 	})
 }
@@ -46,25 +46,25 @@ type DryRunResource struct {
 	SourceTFFilePath  string `yaml:"source_tf_file_path,omitempty"`
 	NewAddress        string `yaml:"new_address,omitempty"`
 	NewTFFileBasename string `yaml:"new_tf_file_basename,omitempty"`
-	StateDirname      string `yaml:"state_dirname,omitempty"`
+	Dirname           string `yaml:"dirname,omitempty"`
 	StateBasename     string `yaml:"state_basename,omitempty"`
 }
 
 // MigratedResource is a plan how a resource is migrated
 type MigratedResource struct {
 	Address        string
+	Dirname        string
 	TFFileBasename string
-	StateDirname   string
 	StateBasename  string
 	Removed        bool
 }
 
 // StatePath returns a file path to Terraform State file.
 func (rsc *MigratedResource) StatePath() string {
-	return filepath.Join(rsc.StateDirname, rsc.StateBasename)
+	return filepath.Join(rsc.Dirname, rsc.StateBasename)
 }
 
 // TFFilePath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
 func (rsc *MigratedResource) TFFilePath() string {
-	return filepath.Join(rsc.StateDirname, rsc.TFFileBasename)
+	return filepath.Join(rsc.Dirname, rsc.TFFileBasename)
 }
