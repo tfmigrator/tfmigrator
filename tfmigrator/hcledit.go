@@ -15,7 +15,6 @@ type getBlockOpt struct {
 	Address string
 	// "-", "foo.tf"
 	File   string
-	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -23,7 +22,6 @@ type getBlockOpt struct {
 func getBlock(opt *getBlockOpt) error {
 	filter := editor.NewBlockGetFilter(opt.Address)
 	client := editor.NewClient(&editor.Option{
-		InStream:  opt.Stdin,
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
@@ -58,7 +56,6 @@ func moveBlock(opt *moveBlockOpt) error {
 
 type listBlockOpt struct {
 	File   string `validate:"required"`
-	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -66,7 +63,6 @@ type listBlockOpt struct {
 func listBlock(opt *listBlockOpt) error {
 	sink := editor.NewBlockListSink()
 	client := editor.NewClient(&editor.Option{
-		InStream:  opt.Stdin,
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
@@ -78,7 +74,6 @@ func listBlock(opt *listBlockOpt) error {
 
 type listBlockMapOpt struct {
 	File   string `validate:"required"`
-	Stdin  io.Reader
 	Stderr io.Writer
 }
 
@@ -87,7 +82,6 @@ func listBlockMap(opt *listBlockMapOpt) (map[string]struct{}, error) {
 	buf := &bytes.Buffer{}
 	if err := listBlock(&listBlockOpt{
 		File:   opt.File,
-		Stdin:  opt.Stdin,
 		Stdout: buf,
 		Stderr: opt.Stderr,
 	}); err != nil {
@@ -108,7 +102,6 @@ func listBlockMap(opt *listBlockMapOpt) (map[string]struct{}, error) {
 
 type listBlockMapsOpt struct {
 	Files  []string `validate:"required"`
-	Stdin  io.Reader
 	Stderr io.Writer
 }
 
@@ -118,7 +111,6 @@ func listBlockMaps(opt *listBlockMapsOpt) (map[string]string, error) {
 	for _, file := range opt.Files {
 		addresses, err := listBlockMap(&listBlockMapOpt{
 			File:   file,
-			Stdin:  opt.Stdin,
 			Stderr: opt.Stderr,
 		})
 		if err != nil {
@@ -139,7 +131,6 @@ type rmBlockOpt struct {
 	Address string
 	// "-", "foo.tf"
 	File   string
-	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -147,7 +138,6 @@ type rmBlockOpt struct {
 func rmBlock(opt *rmBlockOpt) error {
 	filter := editor.NewBlockRemoveFilter(opt.Address)
 	client := editor.NewClient(&editor.Option{
-		InStream:  opt.Stdin,
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
