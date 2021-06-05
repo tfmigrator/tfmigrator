@@ -5,11 +5,12 @@ import "path/filepath"
 // DryRunResult contains a plan how resources are migrated.
 // By marshaling DryRunResult as YAML, we can check the migration plan in advance.
 type DryRunResult struct {
-	MigratedResources    []DryRunResource      `yaml:"migrated_resources"`
-	NotMigratedResources []NotMigratedResource `yaml:"not_migrated_resources"`
+	MigratedResources    []DryRunResource `yaml:"migrated_resources"`
+	RemovedResources     []SourceResource `yaml:"removed_resources"`
+	NotMigratedResources []SourceResource `yaml:"not_migrated_resources"`
 }
 
-type NotMigratedResource struct {
+type SourceResource struct {
 	Address  string
 	FilePath string `yaml:"file_path,omitempty"`
 }
@@ -17,11 +18,17 @@ type NotMigratedResource struct {
 // Add adds a migration plan of a resource to DryRunResult.
 func (result *DryRunResult) Add(src *Source, rsc *MigratedResource) {
 	if rsc == nil {
-		result.NotMigratedResources = append(result.NotMigratedResources, NotMigratedResource{
+		result.NotMigratedResources = append(result.NotMigratedResources, SourceResource{
 			Address:  src.Address(),
 			FilePath: src.TFFilePath,
 		})
 		return
+	}
+	if rsc.Removed {
+		result.RemovedResources = append(result.RemovedResources, SourceResource{
+			Address:  src.Address(),
+			FilePath: src.TFFilePath,
+		})
 	}
 	result.MigratedResources = append(result.MigratedResources, DryRunResource{
 		SourceAddress:     src.Address(),
@@ -49,6 +56,7 @@ type MigratedResource struct {
 	TFFileBasename string
 	StateDirname   string
 	StateBasename  string
+	Removed        bool
 }
 
 // StatePath returns a file path to Terraform State file.

@@ -23,13 +23,23 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 	if destAddress == "" {
 		destAddress = src.Address()
 	}
-	if err := runner.MoveState(ctx, &MoveStateOpt{
-		StatePath:     src.StatePath,
-		StateOut:      migratedResource.StatePath(),
-		SourceAddress: src.Address(),
-		DestAddress:   destAddress,
-	}); err != nil {
-		return err
+
+	if migratedResource.Removed {
+		if err := runner.RemoveState(ctx, &RemoveStateOpt{
+			StatePath: src.StatePath,
+			Address:   src.Address(),
+		}); err != nil {
+			return err
+		}
+	} else {
+		if err := runner.MoveState(ctx, &MoveStateOpt{
+			StatePath:     src.StatePath,
+			StateOut:      migratedResource.StatePath(),
+			SourceAddress: src.Address(),
+			DestAddress:   destAddress,
+		}); err != nil {
+			return err
+		}
 	}
 
 	if src.TFFilePath == "" {
@@ -40,11 +50,21 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 	return runner.migrateTF(src, migratedResource)
 }
 
-func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:funlen
+func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:funlen,cyclop
+	if migratedResource.Removed {
+		return rmBlock(&rmBlockOpt{
+			Address:  "resource." + src.Address(),
+			FilePath: src.TFFilePath,
+			Stdout:   runner.Stdout,
+			Stderr:   runner.Stderr,
+		})
+	}
+
 	tfPath := migratedResource.TFPath()
 	if tfPath == "" {
 		tfPath = src.TFFilePath
 	}
+
 	if src.Address() != migratedResource.Address && migratedResource.Address != "" { //nolint:nestif
 		if src.TFFilePath != migratedResource.TFPath() {
 			buf := &bytes.Buffer{}
