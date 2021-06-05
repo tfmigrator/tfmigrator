@@ -22,9 +22,9 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 		return fmt.Errorf("validate MigratedResource: %w", err)
 	}
 	// terraform state mv
-	destAddress := migratedResource.Address
-	if destAddress == "" {
-		destAddress = src.Address()
+	newAddress := migratedResource.Address
+	if newAddress == "" {
+		newAddress = src.Address()
 	}
 
 	if migratedResource.Removed {
@@ -34,7 +34,7 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 			return fmt.Errorf("remove state (%s, %s): %w", src.Address(), src.StatePath, err)
 		}
 	} else {
-		if err := runner.StateUpdater.Move(ctx, src.Address(), destAddress, &tfstate.MoveOpt{
+		if err := runner.StateUpdater.Move(ctx, src.Address(), newAddress, &tfstate.MoveOpt{
 			StatePath: src.StatePath,
 			StateOut:  migratedResource.StatePath(),
 		}); err != nil {
