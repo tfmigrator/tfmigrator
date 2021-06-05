@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
 )
 
 // Migrate migrates Terraform Configuration and State with `terraform state mv` and `hcledit`.
@@ -50,14 +52,10 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 	return runner.migrateTF(src, migratedResource)
 }
 
-func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:funlen,cyclop
+func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop
+	client := runner.HCLEdit
 	if migratedResource.Removed {
-		return rmBlock(&rmBlockOpt{
-			Address:  "resource." + src.Address(),
-			FilePath: src.TFFilePath,
-			Stdout:   runner.Stdout,
-			Stderr:   runner.Stderr,
-		})
+		return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
 	tfPath := migratedResource.TFPath()
@@ -68,13 +66,8 @@ func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource)
 	if src.Address() != migratedResource.Address && migratedResource.Address != "" { //nolint:nestif
 		if src.TFFilePath != migratedResource.TFPath() {
 			buf := &bytes.Buffer{}
-			if err := getBlock(&getBlockOpt{
-				Address:  "resource." + src.Address(),
-				FilePath: src.TFFilePath,
-				Stdout:   buf,
-				Stderr:   runner.Stderr,
-			}); err != nil {
-				return err
+			if err := client.GetBlock(src.TFFilePath, "resource."+src.Address(), buf); err != nil {
+				return err //nolint:wrapcheck
 			}
 
 			tfFile, err := os.OpenFile(tfPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -83,30 +76,23 @@ func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource)
 			}
 			defer tfFile.Close()
 
-			if err := moveBlock(&moveBlockOpt{
+			if err := client.MoveBlock(&hcledit.MoveBlockOpt{
 				From:     "resource." + src.Address(),
 				To:       "resource." + migratedResource.Address,
 				FilePath: "-",
 				Stdin:    buf,
 				Stdout:   tfFile,
-				Stderr:   runner.Stderr,
 			}); err != nil {
-				return err
+				return err //nolint:wrapcheck
 			}
-			return rmBlock(&rmBlockOpt{
-				Address:  "resource." + src.Address(),
-				FilePath: src.TFFilePath,
-				Stdout:   runner.Stdout,
-				Stderr:   runner.Stderr,
-			})
+			return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
 		}
-		return moveBlock(&moveBlockOpt{
+		return client.MoveBlock(&hcledit.MoveBlockOpt{ //nolint:wrapcheck
 			From:     "resource." + src.Address(),
 			To:       "resource." + migratedResource.Address,
 			Update:   true,
 			FilePath: migratedResource.TFPath(),
 			Stdout:   runner.Stdout,
-			Stderr:   runner.Stderr,
 		})
 	}
 
@@ -116,18 +102,8 @@ func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource)
 	}
 	defer tfFile.Close()
 
-	if err := getBlock(&getBlockOpt{
-		Address:  "resource." + src.Address(),
-		FilePath: src.TFFilePath,
-		Stdout:   tfFile,
-		Stderr:   runner.Stderr,
-	}); err != nil {
-		return err
+	if err := client.GetBlock(src.TFFilePath, "resource."+src.Address(), tfFile); err != nil {
+		return err //nolint:wrapcheck
 	}
-	return rmBlock(&rmBlockOpt{
-		Address:  "resource." + src.Address(),
-		FilePath: src.TFFilePath,
-		Stdout:   runner.Stdout,
-		Stderr:   runner.Stderr,
-	})
+	return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
 }

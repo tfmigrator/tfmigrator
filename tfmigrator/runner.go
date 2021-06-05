@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,6 +17,7 @@ type Runner struct {
 	Stderr   io.Writer `validate:"required"`
 	Migrator Migrator  `validate:"required"`
 	Logger   Logger
+	HCLEdit  *hcledit.Client
 	DryRun   bool
 }
 
@@ -37,6 +39,11 @@ func (runner *Runner) SetDefault() {
 	}
 	if runner.Stderr == nil {
 		runner.Stderr = os.Stderr
+	}
+	if runner.HCLEdit == nil {
+		runner.HCLEdit = &hcledit.Client{
+			Stderr: runner.Stderr,
+		}
 	}
 }
 
@@ -76,12 +83,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		}
 	}
 
-	addressFileMap, err := listBlockMaps(&listBlockMapsOpt{
-		FilePaths: opt.SourceTFFilePaths,
-		Stderr:    stderr,
-	})
+	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceTFFilePaths...)
 	if err != nil {
-		return err
+		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
 
 	dryRunResult := &DryRunResult{}
