@@ -56,9 +56,10 @@ Example
 	}
 
 	runner := &Runner{
-		Logger:  logger,
-		DryRun:  dryRun,
-		Planner: planner,
+		Logger:    logger,
+		DryRun:    dryRun,
+		Planner:   planner,
+		Outputter: NewYAMLOutputter(os.Stderr),
 	}
 
 	return runner.Run(ctx, &RunOpt{

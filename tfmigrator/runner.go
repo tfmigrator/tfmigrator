@@ -9,7 +9,6 @@ import (
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/tfstate"
-	"gopkg.in/yaml.v2"
 )
 
 // Runner provides high level API to migrate Terraform Configuration and State.
@@ -20,9 +19,10 @@ type Runner struct {
 	Planner      Planner   `validate:"required"`
 	Logger       log.Logger
 	HCLEdit      *hcledit.Client
-	DryRun       bool
 	StateReader  *tfstate.Reader
 	StateUpdater *tfstate.Updater
+	Outputter    Outputter
+	DryRun       bool
 }
 
 // Validate sets default values and validates runner.
@@ -63,31 +63,16 @@ type RunOpt struct {
 	SourceTFFilePaths []string `validate:"required"`
 }
 
-func (runner *Runner) dryRun(stdout io.Writer, dryRunResult *Result) error {
-	if err := yaml.NewEncoder(stdout).Encode(dryRunResult); err != nil {
-		return fmt.Errorf("output Result as YAML: %w", err)
-	}
-	return nil
-}
-
 // Run reads Terraform Configuration and State and migrate them.
 func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	if err := validate.Struct(opt); err != nil {
 		return fmt.Errorf("validate RunOpt: %w", err)
 	}
 	runner.SetDefault()
-	stdout := runner.Stdout
 
 	state := &tfstate.State{}
-	if opt.SourceStatePath == "" {
-		// read state by command
-		if err := runner.StateReader.ReadByCmd(ctx, state); err != nil {
-			return fmt.Errorf("read Terraform State by command: %w", err)
-		}
-	} else {
-		if err := tfstate.ReadFromFile(opt.SourceStatePath, state); err != nil {
-			return fmt.Errorf("read Terraform State from a file %s: %w", opt.SourceStatePath, err)
-		}
+	if err := runner.readState(ctx, opt.SourceStatePath, state); err != nil {
+		return err
 	}
 
 	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceTFFilePaths...)
@@ -111,10 +96,26 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		}
 	}
 
-	if runner.DryRun {
-		return runner.dryRun(stdout, dryRunResult)
+	if runner.Outputter != nil {
+		if err := runner.Outputter.Output(dryRunResult); err != nil {
+			return fmt.Errorf("output the result: %w", err)
+		}
 	}
 
+	return nil
+}
+
+func (runner *Runner) readState(ctx context.Context, sourceStatePath string, state *tfstate.State) error {
+	if sourceStatePath == "" {
+		// read state by command
+		if err := runner.StateReader.ReadByCmd(ctx, state); err != nil {
+			return fmt.Errorf("read Terraform State by command: %w", err)
+		}
+	} else {
+		if err := tfstate.ReadFromFile(sourceStatePath, state); err != nil {
+			return fmt.Errorf("read Terraform State from a file %s: %w", sourceStatePath, err)
+		}
+	}
 	return nil
 }
 
@@ -126,7 +127,7 @@ func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRu
 	if err != nil {
 		return fmt.Errorf("plan to migrate a resource: %w", err)
 	}
-	if runner.DryRun {
+	if runner.Outputter != nil {
 		dryRunResult.Add(source, migratedResource)
 		return nil
 	}
