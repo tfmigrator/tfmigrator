@@ -41,7 +41,6 @@ func migrateTF(migratedResource *MigratedResource, opt *MigrateOpt) error { //no
 			if err := getBlock(&getBlockOpt{
 				Address: "resource." + migratedResource.SourceAddress,
 				File:    opt.TFFilePath,
-				Stdin:   opt.Stdin,
 				Stdout:  buf,
 				Stderr:  opt.Stderr,
 			}); err != nil {
@@ -68,7 +67,6 @@ func migrateTF(migratedResource *MigratedResource, opt *MigrateOpt) error { //no
 			return rmBlock(&rmBlockOpt{
 				Address: "resource." + migratedResource.SourceAddress,
 				File:    opt.TFFilePath,
-				Stdin:   opt.Stdin,
 				Stdout:  opt.Stdout,
 				Stderr:  opt.Stderr,
 			})
@@ -93,7 +91,6 @@ func migrateTF(migratedResource *MigratedResource, opt *MigrateOpt) error { //no
 	if err := getBlock(&getBlockOpt{
 		Address: "resource." + migratedResource.SourceAddress,
 		File:    opt.TFFilePath,
-		Stdin:   opt.Stdin,
 		Stdout:  tfFile,
 		Stderr:  opt.Stderr,
 	}); err != nil {
@@ -102,7 +99,6 @@ func migrateTF(migratedResource *MigratedResource, opt *MigrateOpt) error { //no
 	return rmBlock(&rmBlockOpt{
 		Address: "resource." + migratedResource.SourceAddress,
 		File:    opt.TFFilePath,
-		Stdin:   opt.Stdin,
 		Stdout:  opt.Stdout,
 		Stderr:  opt.Stderr,
 	})
