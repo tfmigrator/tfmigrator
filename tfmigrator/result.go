@@ -64,7 +64,7 @@ func (rsc *MigratedResource) StatePath() string {
 	return filepath.Join(rsc.StateDirname, rsc.StateBasename)
 }
 
-// TFPath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
-func (rsc *MigratedResource) TFPath() string {
+// TFFilePath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
+func (rsc *MigratedResource) TFFilePath() string {
 	return filepath.Join(rsc.StateDirname, rsc.TFFileBasename)
 }
