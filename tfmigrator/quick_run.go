@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 )
 
 // QuickRun provides CLI interface to run tfmigrator quickly.
@@ -16,7 +17,8 @@ func QuickRun(migrator Migrator) {
 }
 
 func quickRun(migrator Migrator) error {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	logger := &SimpleLogger{}
 
 	var dryRun bool
