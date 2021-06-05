@@ -18,7 +18,7 @@ type RemoveOpt struct {
 	StatePath string
 }
 
-// RemoveState runs `terraform state rm`.
+// Remove runs `terraform state rm`.
 func (updater *Updater) Remove(ctx context.Context, address string, opt *RemoveOpt) error {
 	return updater.update(ctx, removeStateArgs(address, opt)...)
 }

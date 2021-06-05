@@ -21,6 +21,20 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 	if err := validate.Struct(migratedResource); err != nil {
 		return fmt.Errorf("validate MigratedResource: %w", err)
 	}
+
+	if err := runner.MigrateState(ctx, src, migratedResource); err != nil {
+		return err
+	}
+
+	if src.TFFilePath == "" {
+		return nil
+	}
+
+	return runner.MigrateTF(src, migratedResource)
+}
+
+// MigrateState migrates Terraform State.
+func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
 	// terraform state mv
 	newAddress := migratedResource.Address
 	if newAddress == "" {
@@ -41,16 +55,11 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 			return fmt.Errorf("move state: %w", err)
 		}
 	}
-
-	if src.TFFilePath == "" {
-		return nil
-	}
-
-	// write tf
-	return runner.migrateTF(src, migratedResource)
+	return nil
 }
 
-func (runner *Runner) migrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop
+// MigrateTF migrate Terraform Configuration file.
+func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop
 	client := runner.HCLEdit
 	if migratedResource.Removed {
 		return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
