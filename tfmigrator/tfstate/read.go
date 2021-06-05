@@ -1,4 +1,4 @@
-package tfmigrator
+package tfstate
 
 import (
 	"bytes"
@@ -15,17 +15,15 @@ import (
 	"github.com/Songmu/timeout"
 )
 
-// TFShowOpt is an option of TFShow function.
-type TFShowOpt struct {
-	Stdout io.Writer
+type Reader struct {
 	Stderr io.Writer
 }
 
 // TFShow gets Terraform State by `terraform show -json` command.
-func TFShow(ctx context.Context, opt *TFShowOpt) error {
+func (reader *Reader) TFShow(ctx context.Context, out io.Writer) error {
 	cmd := exec.Command("terraform", "show", "-json")
-	cmd.Stdout = opt.Stdout
-	cmd.Stderr = opt.Stderr
+	cmd.Stdout = out
+	cmd.Stderr = reader.Stderr
 	tioStateMv := timeout.Timeout{
 		Cmd:      cmd,
 		Duration: 1 * time.Minute,
@@ -40,35 +38,27 @@ func TFShow(ctx context.Context, opt *TFShowOpt) error {
 	return nil
 }
 
-// ReadStateByCmdOpt is an option of ReadStateByCmd function.
-type ReadStateByCmdOpt struct {
-	Stderr io.Writer
-}
-
-// ReadStateByCmd reads Terraform State by `terraform show -json` command.
-func ReadStateByCmd(ctx context.Context, opt *ReadStateByCmdOpt, state *State) error {
+// ReadByCmd reads Terraform State by `terraform show -json` command.
+func (reader *Reader) ReadByCmd(ctx context.Context, state *State) error {
 	buf := &bytes.Buffer{}
-	if err := TFShow(ctx, &TFShowOpt{
-		Stdout: buf,
-		Stderr: opt.Stderr,
-	}); err != nil {
+	if err := reader.TFShow(ctx, buf); err != nil {
 		return err
 	}
-	return ReadState(buf, state)
+	return Read(buf, state)
 }
 
-// ReadStateFromFile opens a Terraform State file and reads it into state.
-func ReadStateFromFile(statePath string, state *State) error {
+// ReadFromFile opens a Terraform State file and reads it into state.
+func ReadFromFile(statePath string, state *State) error {
 	stateFile, err := os.Open(statePath)
 	if err != nil {
 		return fmt.Errorf("open a state file %s: %w", statePath, err)
 	}
 	defer stateFile.Close()
-	return ReadState(stateFile, state)
+	return Read(stateFile, state)
 }
 
-// ReadState reads a file into state.
-func ReadState(file io.Reader, state *State) error {
+// Read reads a file into state.
+func Read(file io.Reader, state *State) error {
 	if err := json.NewDecoder(file).Decode(state); err != nil {
 		return fmt.Errorf("parse a state file as JSON: %w", err)
 	}

@@ -1,4 +1,4 @@
-package tfmigrator
+package tfstate
 
 // State is a Terraform State.
 type State struct {

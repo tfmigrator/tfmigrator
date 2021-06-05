@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/tfstate"
 )
 
 // Migrate migrates Terraform Configuration and State with `terraform state mv` and `hcledit`.
@@ -27,20 +28,17 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 	}
 
 	if migratedResource.Removed {
-		if err := runner.RemoveState(ctx, &RemoveStateOpt{
+		if err := runner.StateUpdater.Remove(ctx, src.Address(), &tfstate.RemoveOpt{
 			StatePath: src.StatePath,
-			Address:   src.Address(),
 		}); err != nil {
-			return err
+			return fmt.Errorf("remove state (%s, %s): %w", src.Address(), src.StatePath, err)
 		}
 	} else {
-		if err := runner.MoveState(ctx, &MoveStateOpt{
-			StatePath:     src.StatePath,
-			StateOut:      migratedResource.StatePath(),
-			SourceAddress: src.Address(),
-			DestAddress:   destAddress,
+		if err := runner.StateUpdater.Move(ctx, src.Address(), destAddress, &tfstate.MoveOpt{
+			StatePath: src.StatePath,
+			StateOut:  migratedResource.StatePath(),
 		}); err != nil {
-			return err
+			return fmt.Errorf("move state: %w", err)
 		}
 	}
 

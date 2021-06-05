@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+
+	tflog "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
 // QuickRun provides CLI interface to run tfmigrator quickly.
@@ -19,7 +21,7 @@ func QuickRun(migrator Migrator) {
 func quickRun(migrator Migrator) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	logger := &SimpleLogger{}
+	logger := &tflog.SimpleLogger{}
 
 	var dryRun bool
 	var help bool
@@ -50,7 +52,7 @@ Example
 	}
 
 	if err := logger.SetLogLevel(logLevel); err != nil {
-		return err
+		return fmt.Errorf("set the log level (%s): %w", logLevel, err)
 	}
 
 	runner := &Runner{

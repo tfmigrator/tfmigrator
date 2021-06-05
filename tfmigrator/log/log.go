@@ -1,4 +1,4 @@
-package tfmigrator
+package log
 
 import (
 	"errors"

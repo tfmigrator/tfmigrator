@@ -7,18 +7,22 @@ import (
 	"os"
 
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/tfstate"
 	"gopkg.in/yaml.v2"
 )
 
 // Runner provides high level API to migrate Terraform Configuration and State.
 type Runner struct {
-	Stdin    io.Reader `validate:"required"`
-	Stdout   io.Writer `validate:"required"`
-	Stderr   io.Writer `validate:"required"`
-	Migrator Migrator  `validate:"required"`
-	Logger   Logger
-	HCLEdit  *hcledit.Client
-	DryRun   bool
+	Stdin        io.Reader `validate:"required"`
+	Stdout       io.Writer `validate:"required"`
+	Stderr       io.Writer `validate:"required"`
+	Migrator     Migrator  `validate:"required"`
+	Logger       log.Logger
+	HCLEdit      *hcledit.Client
+	DryRun       bool
+	StateReader  *tfstate.Reader
+	StateUpdater *tfstate.Updater
 }
 
 func (runner *Runner) Validate() error {
@@ -45,6 +49,11 @@ func (runner *Runner) SetDefault() {
 			Stderr: runner.Stderr,
 		}
 	}
+	if runner.StateReader == nil {
+		runner.StateReader = &tfstate.Reader{
+			Stderr: runner.Stderr,
+		}
+	}
 }
 
 // RunOpt is an option of Run method.
@@ -67,18 +76,15 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	}
 	runner.SetDefault()
 	stdout := runner.Stdout
-	stderr := runner.Stderr
 
-	state := &State{}
+	state := &tfstate.State{}
 	if opt.SourceStatePath == "" {
 		// read state by command
-		if err := ReadStateByCmd(ctx, &ReadStateByCmdOpt{
-			Stderr: stderr,
-		}, state); err != nil {
+		if err := runner.StateReader.ReadByCmd(ctx, state); err != nil {
 			return fmt.Errorf("read Terraform State by command: %w", err)
 		}
 	} else {
-		if err := ReadStateFromFile(opt.SourceStatePath, state); err != nil {
+		if err := tfstate.ReadFromFile(opt.SourceStatePath, state); err != nil {
 			return fmt.Errorf("read Terraform State from a file %s: %w", opt.SourceStatePath, err)
 		}
 	}
@@ -112,7 +118,7 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 }
 
 type Source struct {
-	Resource *Resource
+	Resource *tfstate.Resource
 	// If the resource isn't found in Terraform Configuration files, TFFilePath is empty
 	TFFilePath string
 	StatePath  string
