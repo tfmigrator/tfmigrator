@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Songmu/timeout"
@@ -14,27 +14,39 @@ import (
 
 // MoveStateOpt is an option of MoveState function.
 type MoveStateOpt struct {
-	StateOut string
-	Path     string
-	NewPath  string
-	Stderr   io.Writer
-	DryRun   bool
-	Logger   Logger
+	StatePath     string
+	StateOut      string
+	SourceAddress string
+	DestAddress   string
+}
+
+func moveStateArgs(opt *MoveStateOpt) []string {
+	args := []string{"state", "mv"}
+	if opt.StatePath != "" {
+		args = append(args, "-state", opt.StatePath)
+	}
+	if opt.StateOut != "" {
+		args = append(args, "-state-out", opt.StateOut)
+	}
+
+	return append(args, opt.SourceAddress, opt.DestAddress)
 }
 
 // MoveState runs `terraform state mv`.
-func MoveState(ctx context.Context, opt *MoveStateOpt) error {
-	if opt.DryRun {
-		if opt.Logger != nil {
-			opt.Logger.Info("[DRYRUN] + terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+func (runner *Runner) MoveState(ctx context.Context, opt *MoveStateOpt) error {
+	args := moveStateArgs(opt)
+	if runner.DryRun {
+		if runner.Logger != nil {
+			runner.Logger.Info("[DRYRUN] + terraform " + strings.Join(args, " "))
 		}
 		return nil
 	}
-	if opt.Logger != nil {
-		opt.Logger.Info("+ terraform state mv -state-out " + opt.StateOut + " " + opt.Path + " " + opt.NewPath)
+	if runner.Logger != nil {
+		runner.Logger.Info("+ terraform " + strings.Join(args, " "))
 	}
-	cmd := exec.Command("terraform", "state", "mv", "-state-out", opt.StateOut, opt.Path, opt.NewPath) //nolint:gosec
-	cmd.Stderr = opt.Stderr
+	cmd := exec.Command("terraform", args...)
+	cmd.Stdout = runner.Stdout
+	cmd.Stderr = runner.Stderr
 	tioStateMv := timeout.Timeout{
 		Cmd:      cmd,
 		Duration: 1 * time.Minute,

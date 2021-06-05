@@ -18,9 +18,9 @@ func Test_moveBlock(t *testing.T) { //nolint:paralleltest
 			exp: `resource "null_resource" "bar" {}
 resource "null_resource" "yoo" {}`,
 			opt: &moveBlockOpt{
-				From: "resource.null_resource.foo",
-				To:   "resource.null_resource.yoo",
-				File: "-",
+				From:     "resource.null_resource.foo",
+				To:       "resource.null_resource.yoo",
+				FilePath: "-",
 				Stdin: strings.NewReader(`resource "null_resource" "bar" {}
 resource "null_resource" "foo" {}`),
 				Stderr: os.Stderr,

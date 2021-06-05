@@ -14,9 +14,9 @@ type getBlockOpt struct {
 	// e.g. resource.null_resource.foo
 	Address string
 	// "-", "foo.tf"
-	File   string
-	Stdout io.Writer
-	Stderr io.Writer
+	FilePath string
+	Stdout   io.Writer
+	Stderr   io.Writer
 }
 
 func getBlock(opt *getBlockOpt) error {
@@ -25,20 +25,20 @@ func getBlock(opt *getBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	if err := client.Edit(opt.File, false, filter); err != nil {
-		return fmt.Errorf("get a block %s from %s: %w", opt.Address, opt.File, err)
+	if err := client.Edit(opt.FilePath, false, filter); err != nil {
+		return fmt.Errorf("get a block %s from %s: %w", opt.Address, opt.FilePath, err)
 	}
 	return nil
 }
 
 type moveBlockOpt struct {
-	From   string
-	To     string
-	File   string
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-	Update bool
+	From     string
+	To       string
+	FilePath string
+	Stdin    io.Reader
+	Stdout   io.Writer
+	Stderr   io.Writer
+	Update   bool
 }
 
 func moveBlock(opt *moveBlockOpt) error {
@@ -48,16 +48,16 @@ func moveBlock(opt *moveBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	if err := client.Edit(opt.File, opt.Update, filter); err != nil {
-		return fmt.Errorf("move a block in %s from %s to %s: %w", opt.File, opt.From, opt.To, err)
+	if err := client.Edit(opt.FilePath, opt.Update, filter); err != nil {
+		return fmt.Errorf("move a block in %s from %s to %s: %w", opt.FilePath, opt.From, opt.To, err)
 	}
 	return nil
 }
 
 type listBlockOpt struct {
-	File   string `validate:"required"`
-	Stdout io.Writer
-	Stderr io.Writer
+	FilePath string `validate:"required"`
+	Stdout   io.Writer
+	Stderr   io.Writer
 }
 
 func listBlock(opt *listBlockOpt) error {
@@ -66,24 +66,24 @@ func listBlock(opt *listBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	if err := client.Derive(opt.File, sink); err != nil {
-		return fmt.Errorf("list blocks in %s: %w", opt.File, err)
+	if err := client.Derive(opt.FilePath, sink); err != nil {
+		return fmt.Errorf("list blocks in %s: %w", opt.FilePath, err)
 	}
 	return nil
 }
 
 type listBlockMapOpt struct {
-	File   string `validate:"required"`
-	Stderr io.Writer
+	FilePath string `validate:"required"`
+	Stderr   io.Writer
 }
 
 func listBlockMap(opt *listBlockMapOpt) (map[string]struct{}, error) {
 	m := map[string]struct{}{}
 	buf := &bytes.Buffer{}
 	if err := listBlock(&listBlockOpt{
-		File:   opt.File,
-		Stdout: buf,
-		Stderr: opt.Stderr,
+		FilePath: opt.FilePath,
+		Stdout:   buf,
+		Stderr:   opt.Stderr,
 	}); err != nil {
 		return nil, err
 	}
@@ -101,17 +101,17 @@ func listBlockMap(opt *listBlockMapOpt) (map[string]struct{}, error) {
 }
 
 type listBlockMapsOpt struct {
-	Files  []string `validate:"required"`
-	Stderr io.Writer
+	FilePaths []string `validate:"required"`
+	Stderr    io.Writer
 }
 
 // listBlockMaps returns a map of resource address and Terraform Configuration file path.
 func listBlockMaps(opt *listBlockMapsOpt) (map[string]string, error) {
 	m := map[string]string{}
-	for _, file := range opt.Files {
+	for _, file := range opt.FilePaths {
 		addresses, err := listBlockMap(&listBlockMapOpt{
-			File:   file,
-			Stderr: opt.Stderr,
+			FilePath: file,
+			Stderr:   opt.Stderr,
 		})
 		if err != nil {
 			return nil, err
@@ -130,9 +130,9 @@ type rmBlockOpt struct {
 	// e.g. resource.null_resource.foo
 	Address string
 	// "-", "foo.tf"
-	File   string
-	Stdout io.Writer
-	Stderr io.Writer
+	FilePath string
+	Stdout   io.Writer
+	Stderr   io.Writer
 }
 
 func rmBlock(opt *rmBlockOpt) error {
@@ -141,8 +141,8 @@ func rmBlock(opt *rmBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: opt.Stderr,
 	})
-	if err := client.Edit(opt.File, true, filter); err != nil {
-		return fmt.Errorf("get a block %s from %s: %w", opt.Address, opt.File, err)
+	if err := client.Edit(opt.FilePath, true, filter); err != nil {
+		return fmt.Errorf("get a block %s from %s: %w", opt.Address, opt.FilePath, err)
 	}
 	return nil
 }

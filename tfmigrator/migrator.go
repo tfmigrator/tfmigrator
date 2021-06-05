@@ -7,11 +7,11 @@ import "fmt"
 // Migrator determines the updated resource name, outputted State file path, and outputted Terraform Configuration file path.
 // If migrator
 type Migrator interface {
-	Migrate(rsc *Resource) (*MigratedResource, error)
+	Migrate(src *Source) (*MigratedResource, error)
 }
 
 // MigrateFunc migrates a Terraform resource.
-type MigrateFunc func(rsc *Resource) (*MigratedResource, error)
+type MigrateFunc func(src *Source) (*MigratedResource, error)
 
 type newMigrator struct {
 	migrate MigrateFunc
@@ -24,8 +24,8 @@ func NewMigrator(fn MigrateFunc) Migrator {
 	}
 }
 
-func (migrator *newMigrator) Migrate(rsc *Resource) (*MigratedResource, error) {
-	return migrator.migrate(rsc)
+func (migrator *newMigrator) Migrate(src *Source) (*MigratedResource, error) {
+	return migrator.migrate(src)
 }
 
 type combinedMigrator struct {
@@ -39,9 +39,9 @@ func CombineMigrators(migrators ...Migrator) Migrator {
 	}
 }
 
-func (migrator *combinedMigrator) Migrate(rsc *Resource) (*MigratedResource, error) {
+func (migrator *combinedMigrator) Migrate(src *Source) (*MigratedResource, error) {
 	for i, m := range migrator.migrators {
-		migratedResource, err := m.Migrate(rsc)
+		migratedResource, err := m.Migrate(src)
 		if err != nil {
 			return nil, fmt.Errorf("plan to migrate a resource by combinedMigrator (%d): %w", i, err)
 		}

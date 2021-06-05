@@ -5,27 +5,50 @@ import "path/filepath"
 // DryRunResult contains a plan how resources are migrated.
 // By marshaling DryRunResult as YAML, we can check the migration plan in advance.
 type DryRunResult struct {
-	MigratedResources    []MigratedResource `yaml:"migrated_resources"`
-	NotMigratedResources []string           `yaml:"not_migrated_resources"`
+	MigratedResources    []DryRunResource      `yaml:"migrated_resources"`
+	NotMigratedResources []NotMigratedResource `yaml:"not_migrated_resources"`
+}
+
+type NotMigratedResource struct {
+	Address  string
+	FilePath string `yaml:"file_path,omitempty"`
 }
 
 // Add adds a migration plan of a resource to DryRunResult.
-func (result *DryRunResult) Add(address string, rsc *MigratedResource) {
+func (result *DryRunResult) Add(src *Source, rsc *MigratedResource) {
 	if rsc == nil {
-		result.NotMigratedResources = append(result.NotMigratedResources, address)
+		result.NotMigratedResources = append(result.NotMigratedResources, NotMigratedResource{
+			Address:  src.Address(),
+			FilePath: src.TFFilePath,
+		})
 		return
 	}
-	result.MigratedResources = append(result.MigratedResources, *rsc)
+	result.MigratedResources = append(result.MigratedResources, DryRunResource{
+		SourceAddress:     src.Address(),
+		SourceTFFilePath:  src.TFFilePath,
+		NewAddress:        rsc.Address,
+		NewTFFileBasename: rsc.TFFileBasename,
+		StateDirname:      rsc.StateDirname,
+		StateBasename:     rsc.StateBasename,
+	})
+}
+
+// DryRunResource is a plan how a resource is migrated
+type DryRunResource struct {
+	SourceAddress     string `yaml:"source_address"`
+	SourceTFFilePath  string `yaml:"source_tf_file_path,omitempty"`
+	NewAddress        string `yaml:"new_address,omitempty"`
+	NewTFFileBasename string `yaml:"new_tf_file_basename,omitempty"`
+	StateDirname      string `yaml:"state_dirname,omitempty"`
+	StateBasename     string `yaml:"state_basename,omitempty"`
 }
 
 // MigratedResource is a plan how a resource is migrated
 type MigratedResource struct {
-	SourceAddress string `yaml:"source_address"`
-	DestAddress   string `yaml:"dest_address"`
-	SourceTFPath  string `yaml:"source_tf_path"`
-	TFBasename    string `yaml:"tf_basename"`
-	StateDirname  string `yaml:"state_dirname"`
-	StateBasename string `yaml:"state_basename"`
+	Address        string
+	TFFileBasename string
+	StateDirname   string
+	StateBasename  string
 }
 
 // StatePath returns a file path to Terraform State file.
@@ -35,15 +58,5 @@ func (rsc *MigratedResource) StatePath() string {
 
 // TFPath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
 func (rsc *MigratedResource) TFPath() string {
-	return filepath.Join(rsc.StateDirname, rsc.TFBasename)
-}
-
-// AddressChanged returns true if the resource address is changed.
-func (rsc *MigratedResource) AddressChanged() bool {
-	return rsc.SourceAddress != rsc.DestAddress
-}
-
-// FileChanged returns true if the resource file path is changed.
-func (rsc *MigratedResource) FileChanged() bool {
-	return rsc.SourceTFPath != rsc.TFPath()
+	return filepath.Join(rsc.StateDirname, rsc.TFFileBasename)
 }
