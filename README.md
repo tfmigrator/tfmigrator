@@ -1,5 +1,6 @@
 # tfmigrator
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/tfmigrator/tfmigrator.svg)](https://pkg.go.dev/github.com/tfmigrator/tfmigrator)
 [![Build Status](https://github.com/tfmigrator/tfmigrator/workflows/test/badge.svg)](https://github.com/tfmigrator/tfmigrator/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tfmigrator/tfmigrator)](https://goreportcard.com/report/github.com/tfmigrator/tfmigrator)
 [![GitHub last commit](https://img.shields.io/github/last-commit/tfmigrator/tfmigrator.svg)](https://github.com/tfmigrator/tfmigrator)
