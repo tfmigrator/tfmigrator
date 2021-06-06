@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Songmu/timeout"
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
+	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/log"
 )
 
 // Reader reads Terraform State.

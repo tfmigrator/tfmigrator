@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	tflog "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
+	tflog "github.com/suzuki-shunsuke/tfmigrator/tfmigrator/log"
 )
 
 // QuickRun provides CLI interface to run tfmigrator quickly.

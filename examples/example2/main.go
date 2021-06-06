@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
+	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator"
 )
 
 func main() {

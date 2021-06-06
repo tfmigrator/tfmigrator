@@ -1,4 +1,4 @@
-# tfmigrator-sdk
+# tfmigrator
 
 Go library to migrate Terraform Configuration and State with `terraform state mv` and `terraform state rm` command and [hcledit](https://github.com/minamijoyo/hcledit).
 
@@ -11,22 +11,22 @@ Go library to migrate Terraform Configuration and State with `terraform state mv
 
 ## Compared with tfmigrator
 
-tfmigrator-sdk is Go library. On the other hand, [tfmigrator](https://github.com/suzuki-shunsuke/tfmigrator) is CLI tool.
+tfmigrator is Go library. On the other hand, [tfmigrator](https://github.com/suzuki-shunsuke/tfmigrator) is CLI tool.
 
-Originally we have been developing tfmigrator before tfmigrator-sdk.
+Originally we have been developing tfmigrator before tfmigrator.
 In tfmigrator, we define rules for migration with YAML, Go's [text/template](https://golang.org/pkg/text/template/), [expr](https://github.com/antonmedv/expr).
 So we don't have to write code with Go.
 
 But when we migrate many resources, it is hard to write YAML.
-So we started to develop tfmigrator-sdk instead of tfmigrator.
+So we started to develop tfmigrator instead of tfmigrator.
 
-tfmigrator-sdk is Go library, so we can implement the migration rules with Go.
-In tfmigrator-sdk, we can migrate Terraform Configuration and State by implementing the interface `Planner`.
+tfmigrator is Go library, so we can implement the migration rules with Go.
+In tfmigrator, we can migrate Terraform Configuration and State by implementing the interface `Planner`.
 This is very simple and powerful and flexible.
 And we don't have to configuration file format and expr's Language specification, so the learning cost is low.
 Using `QuickRun` function, we can implement CLI for migration quickly.
 
-And compared with tfmigrator v1.0.0, tfmigrator-sdk provides rich feature.
+And compared with tfmigrator v1.0.0, tfmigrator provides rich feature.
 
 * Support to remove Resource
 * Support to update Terraform Configuration files in place
