@@ -11,7 +11,7 @@ import (
 	tflog "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
-// QuickRun provides CLI interface to run tfplanner quickly.
+// QuickRun provides CLI interface to run tfmigrator quickly.
 func QuickRun(planner Planner) {
 	if err := quickRun(planner); err != nil {
 		log.Fatal(err)
@@ -33,15 +33,15 @@ func quickRun(planner Planner) error {
 	args := flag.Args()
 
 	if help || (len(args) != 0 && args[0] == "help") {
-		fmt.Fprint(os.Stderr, `tfplanner - Migrate Terraform Configuration and State
+		fmt.Fprint(os.Stderr, `tfmigrator - Migrate Terraform Configuration and State
 
 Usage
-  tfplanner help
-  tfplanner [-help] [-dry-run] [-log-level debug] [Terraform Configuration file path ...]
+  tfmigrator help
+  tfmigrator [-help] [-dry-run] [-log-level debug] [Terraform Configuration file path ...]
 
 Example
 
-  $ ls *.tf | xargs tfplanner -dry-run -log-level debug
+  $ ls *.tf | xargs tfmigrator -dry-run -log-level debug
 `)
 		return nil
 	}
