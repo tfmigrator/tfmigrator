@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/hcledit"
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/log"
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/tfstate"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/hcledit"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/log"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
 // Runner provides high level API to migrate Terraform Configuration and State.

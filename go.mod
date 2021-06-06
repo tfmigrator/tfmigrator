@@ -1,4 +1,4 @@
-module github.com/suzuki-shunsuke/tfmigrator
+module github.com/tfmigrator/tfmigrator
 
 go 1.16
 

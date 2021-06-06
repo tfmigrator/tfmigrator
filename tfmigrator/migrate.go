@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/hcledit"
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/tfstate"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/hcledit"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
 // Migrate migrates Terraform Configuration and State with `terraform state mv` and `hcledit`.

@@ -1,6 +1,6 @@
 package tfmigrator
 
-import "github.com/suzuki-shunsuke/tfmigrator/tfmigrator/tfstate"
+import "github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 
 // Source is a source Terraform resource.
 type Source struct {

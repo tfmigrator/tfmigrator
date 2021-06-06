@@ -1,9 +1,9 @@
 # tfmigrator
 
-[![Build Status](https://github.com/suzuki-shunsuke/tfmigrator/workflows/test/badge.svg)](https://github.com/suzuki-shunsuke/tfmigrator/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/suzuki-shunsuke/tfmigrator)](https://goreportcard.com/report/github.com/suzuki-shunsuke/tfmigrator)
-[![GitHub last commit](https://img.shields.io/github/last-commit/suzuki-shunsuke/tfmigrator.svg)](https://github.com/suzuki-shunsuke/tfmigrator)
-[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/tfmigrator/main/LICENSE)
+[![Build Status](https://github.com/tfmigrator/tfmigrator/workflows/test/badge.svg)](https://github.com/tfmigrator/tfmigrator/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tfmigrator/tfmigrator)](https://goreportcard.com/report/github.com/tfmigrator/tfmigrator)
+[![GitHub last commit](https://img.shields.io/github/last-commit/tfmigrator/tfmigrator.svg)](https://github.com/tfmigrator/tfmigrator)
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/tfmigrator/tfmigrator/main/LICENSE)
 
 Go library to migrate Terraform Configuration and State with `terraform state mv` and `terraform state rm` command and [hcledit](https://github.com/minamijoyo/hcledit).
 
@@ -28,10 +28,10 @@ But when we migrate many resources, it is hard to write YAML.
 So we started to develop tfmigrator as Go package instead of tfmigrator-cli.
 
 tfmigrator is Go package, so we can implement the migration rules with Go.
-In tfmigrator, we can migrate Terraform Configuration and State by implementing the interface [Planner](https://pkg.go.dev/github.com/suzuki-shunsuke/tfmigrator/tfmigrator#Planner).
+In tfmigrator, we can migrate Terraform Configuration and State by implementing the interface [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner).
 This is very simple and powerful and flexible.
 And we don't have to learn the configuration file format and expr's Language specification, so the learning cost is low.
-Using [QuickRun](https://pkg.go.dev/github.com/suzuki-shunsuke/tfmigrator/tfmigrator#QuickRun) function, we can implement CLI for migration quickly.
+Using [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun) function, we can implement CLI for migration quickly.
 
 And compared with tfmigrator-cli v1.0.0, tfmigrator provides rich feature.
 
