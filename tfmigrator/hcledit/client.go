@@ -3,7 +3,7 @@ package hcledit
 import (
 	"io"
 
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
+	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/log"
 )
 
 // Client is a client to operate Terraform Configuration files with hcledit.

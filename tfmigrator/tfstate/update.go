@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Songmu/timeout"
-	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
+	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator/log"
 )
 
 // Updater updates Terraform State by `terraform state` commands.
