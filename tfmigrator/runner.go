@@ -49,11 +49,13 @@ func (runner *Runner) SetDefault() {
 		runner.HCLEdit = &hcledit.Client{
 			Stderr: runner.Stderr,
 			DryRun: runner.DryRun,
+			Logger: runner.Logger,
 		}
 	}
 	if runner.StateReader == nil {
 		runner.StateReader = &tfstate.Reader{
 			Stderr: runner.Stderr,
+			Logger: runner.Logger,
 		}
 	}
 	if runner.StateUpdater == nil {

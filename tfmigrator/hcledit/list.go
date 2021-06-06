@@ -17,6 +17,7 @@ func (client *Client) ListBlock(filePath string, out io.Writer) error {
 		OutStream: out,
 		ErrStream: client.Stderr,
 	})
+	client.logDebug(fmt.Sprintf("+ hcledit block list -f %s", filePath))
 	if err := cl.Derive(filePath, sink); err != nil {
 		return fmt.Errorf("list blocks in %s: %w", filePath, err)
 	}

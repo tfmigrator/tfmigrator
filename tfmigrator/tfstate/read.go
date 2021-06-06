@@ -13,11 +13,20 @@ import (
 	"time"
 
 	"github.com/Songmu/timeout"
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
 // Reader reads Terraform State.
 type Reader struct {
 	Stderr io.Writer
+	Logger log.Logger
+}
+
+func (reader *Reader) logDebug(msg string) {
+	if reader.Logger == nil {
+		return
+	}
+	reader.Logger.Debug(msg)
 }
 
 // TFShow gets Terraform State by `terraform show -json` command.
@@ -29,12 +38,15 @@ func (reader *Reader) TFShow(ctx context.Context, out io.Writer) error {
 		Cmd:      cmd,
 		Duration: 1 * time.Minute,
 	}
+
+	reader.logDebug("+ terraform show -json")
+
 	status, err := tioStateMv.RunContext(ctx)
 	if err != nil {
-		return fmt.Errorf("it failed to run a command: %w", err)
+		return fmt.Errorf("terraform show -json: %w", err)
 	}
 	if status.Code != 0 {
-		return errors.New("exit code != 0: " + strconv.Itoa(status.Code))
+		return errors.New("terraform show -json: exit code != 0: " + strconv.Itoa(status.Code))
 	}
 	return nil
 }

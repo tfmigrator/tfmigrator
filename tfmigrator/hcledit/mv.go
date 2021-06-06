@@ -28,9 +28,18 @@ func (client *Client) MoveBlock(opt *MoveBlockOpt) error {
 		OutStream: opt.Stdout,
 		ErrStream: client.Stderr,
 	})
+
+	cmd := "+ hcledit block mv"
+	if opt.Update {
+		cmd += " -u"
+	}
+	cmd += " " + opt.From + " " + opt.To
 	if client.DryRun {
+		client.logDebug("[DRY RUN] " + cmd)
 		return nil
 	}
+	client.logDebug(cmd)
+
 	if err := cl.Edit(opt.FilePath, opt.Update, filter); err != nil {
 		return fmt.Errorf("move a block in %s from %s to %s: %w", opt.FilePath, opt.From, opt.To, err)
 	}

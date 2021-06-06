@@ -22,16 +22,18 @@ type Updater struct {
 	Logger log.Logger
 }
 
+func (updater *Updater) logInfo(msg string) {
+	if updater.Logger != nil {
+		updater.Logger.Info(msg)
+	}
+}
+
 func (updater *Updater) update(ctx context.Context, args ...string) error {
 	if updater.DryRun {
-		if updater.Logger != nil {
-			updater.Logger.Info("[DRYRUN] + terraform " + strings.Join(args, " "))
-		}
+		updater.logInfo("[DRYRUN] + terraform " + strings.Join(args, " "))
 		return nil
 	}
-	if updater.Logger != nil {
-		updater.Logger.Info("+ terraform " + strings.Join(args, " "))
-	}
+	updater.logInfo("+ terraform " + strings.Join(args, " "))
 	cmd := exec.Command("terraform", args...)
 	cmd.Stdout = updater.Stdout
 	cmd.Stderr = updater.Stderr

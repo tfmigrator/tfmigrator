@@ -2,6 +2,8 @@ package hcledit
 
 import (
 	"io"
+
+	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
 // Client is a client to operate Terraform Configuration files with hcledit.
@@ -11,4 +13,12 @@ type Client struct {
 	DryRun bool
 	// Stderr is an error stream of hcledit's editor.
 	Stderr io.Writer
+	Logger log.Logger
+}
+
+func (client *Client) logDebug(msg string) {
+	if client.Logger == nil {
+		return
+	}
+	client.Logger.Debug(msg)
 }
