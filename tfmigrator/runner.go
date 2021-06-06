@@ -68,7 +68,10 @@ func (runner *Runner) SetDefault() {
 
 // RunOpt is an option of Run method.
 type RunOpt struct {
-	SourceStatePath   string
+	// SourceStatePath is the file path to State.
+	// If SourceStatePath is empty, State is read by `terraform show -json` command.
+	SourceStatePath string
+	// SourceTFFilePaths is a list of Terraform Configuration file paths.
 	SourceTFFilePaths []string `validate:"required"`
 }
 

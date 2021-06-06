@@ -15,6 +15,7 @@ import (
 	"github.com/Songmu/timeout"
 )
 
+// Reader reads Terraform State.
 type Reader struct {
 	Stderr io.Writer
 }

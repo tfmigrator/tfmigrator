@@ -7,15 +7,20 @@ import (
 	"github.com/minamijoyo/hcledit/editor"
 )
 
+// MoveBlockOpt is an option of `MoveBlock` function.
 type MoveBlockOpt struct {
-	From     string
+	// From is a source address.
+	From string
+	// To is a new address.
 	To       string
 	FilePath string
 	Stdin    io.Reader
 	Stdout   io.Writer
-	Update   bool
+	// If `Update` is true, the Terraform Configuration is updated in-place.
+	Update bool
 }
 
+// MoveBlock moves a block.
 func (client *Client) MoveBlock(opt *MoveBlockOpt) error {
 	filter := editor.NewBlockRenameFilter(opt.From, opt.To)
 	cl := editor.NewClient(&editor.Option{

@@ -14,6 +14,7 @@ import (
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
+// Updater updates Terraform State by `terraform state` commands.
 type Updater struct {
 	Stdout io.Writer
 	Stderr io.Writer

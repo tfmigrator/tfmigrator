@@ -7,6 +7,8 @@ import (
 	"github.com/minamijoyo/hcledit/editor"
 )
 
+// GetBlock gets a block `address` from `filePath` and outputs it into `out`.
+// address is an address like `resource.null_resource.foo`.
 func (client *Client) GetBlock(filePath, address string, out io.Writer) error {
 	filter := editor.NewBlockGetFilter(address)
 	cl := editor.NewClient(&editor.Option{

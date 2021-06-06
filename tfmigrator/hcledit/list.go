@@ -10,6 +10,7 @@ import (
 	"github.com/minamijoyo/hcledit/editor"
 )
 
+// ListBlock lists blocks from `filePath` and outputs them into `out`.
 func (client *Client) ListBlock(filePath string, out io.Writer) error {
 	sink := editor.NewBlockListSink()
 	cl := editor.NewClient(&editor.Option{
@@ -22,6 +23,8 @@ func (client *Client) ListBlock(filePath string, out io.Writer) error {
 	return nil
 }
 
+// ListBlockMap lists block addresses from `filePath` and returns them as map.
+// The key of map is a block address like `resource.null_resource.foo`.
 func (client *Client) ListBlockMap(filePath string) (map[string]struct{}, error) {
 	m := map[string]struct{}{}
 	buf := &bytes.Buffer{}

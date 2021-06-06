@@ -6,6 +6,7 @@ import (
 	"github.com/minamijoyo/hcledit/editor"
 )
 
+// RemoveBlock removes a block `address` from a Terraform Configuration file `filePath`.
 func (client *Client) RemoveBlock(filePath, address string) error {
 	filter := editor.NewBlockRemoveFilter(address)
 	cl := editor.NewClient(&editor.Option{
