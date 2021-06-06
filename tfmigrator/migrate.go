@@ -53,7 +53,7 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 	}
 	statePath := migratedResource.StatePath()
 	if statePath != "" {
-		if err := os.MkdirAll(filepath.Dir(statePath), 0755); err != nil {
+		if err := runner.mkdirAll(filepath.Dir(statePath)); err != nil {
 			return fmt.Errorf("create parent directories of Terraform State %s: %w", statePath, err)
 		}
 	}
@@ -66,7 +66,10 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 	return nil
 }
 
-func appendFile(filePath string) (io.WriteCloser, error) {
+func (runner *Runner) appendFile(filePath string) (io.WriteCloser, error) {
+	if runner.DryRun {
+		return &nopWriteCloser{}, nil
+	}
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("create a file or append to the file: %w", err)
@@ -74,8 +77,15 @@ func appendFile(filePath string) (io.WriteCloser, error) {
 	return f, nil
 }
 
+func (runner *Runner) mkdirAll(p string) error {
+	if runner.DryRun {
+		return nil
+	}
+	return os.MkdirAll(p, 0755) //nolint:wrapcheck
+}
+
 // MigrateTF migrate Terraform Configuration file.
-func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop
+func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
 	client := runner.HCLEdit
 	if migratedResource.Removed {
 		return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
@@ -87,16 +97,18 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 	}
 
 	if src.Address() != migratedResource.Address && migratedResource.Address != "" { //nolint:nestif
+		// address is changed and isn't empty
 		if src.TFFilePath != migratedResource.TFFilePath() {
+			// Terraform Configuration file path is changed.
 			buf := &bytes.Buffer{}
 			if err := client.GetBlock(src.TFFilePath, "resource."+src.Address(), buf); err != nil {
 				return err //nolint:wrapcheck
 			}
 
-			if err := os.MkdirAll(filepath.Dir(tfFilePath), 0755); err != nil {
+			if err := runner.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
 				return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
 			}
-			tfFile, err := appendFile(tfFilePath)
+			tfFile, err := runner.appendFile(tfFilePath)
 			if err != nil {
 				return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
 			}
@@ -122,10 +134,10 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		})
 	}
 
-	if err := os.MkdirAll(filepath.Dir(tfFilePath), 0755); err != nil {
+	if err := runner.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
 		return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
 	}
-	tfFile, err := appendFile(tfFilePath)
+	tfFile, err := runner.appendFile(tfFilePath)
 	if err != nil {
 		return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
 	}
