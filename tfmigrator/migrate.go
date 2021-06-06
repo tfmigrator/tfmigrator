@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/hcledit"
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/tfstate"
@@ -48,13 +49,19 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 		}); err != nil {
 			return fmt.Errorf("remove state (%s, %s): %w", src.Address(), src.StatePath, err)
 		}
-	} else {
-		if err := runner.StateUpdater.Move(ctx, src.Address(), newAddress, &tfstate.MoveOpt{
-			StatePath: src.StatePath,
-			StateOut:  migratedResource.StatePath(),
-		}); err != nil {
-			return fmt.Errorf("move state: %w", err)
+		return nil
+	}
+	statePath := migratedResource.StatePath()
+	if statePath != "" {
+		if err := os.MkdirAll(filepath.Dir(statePath), 0755); err != nil {
+			return fmt.Errorf("create parent directories of Terraform State %s: %w", statePath, err)
 		}
+	}
+	if err := runner.StateUpdater.Move(ctx, src.Address(), newAddress, &tfstate.MoveOpt{
+		StatePath: src.StatePath,
+		StateOut:  statePath,
+	}); err != nil {
+		return fmt.Errorf("move state: %w", err)
 	}
 	return nil
 }
@@ -86,6 +93,9 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 				return err //nolint:wrapcheck
 			}
 
+			if err := os.MkdirAll(filepath.Dir(tfFilePath), 0755); err != nil {
+				return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
+			}
 			tfFile, err := appendFile(tfFilePath)
 			if err != nil {
 				return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
@@ -112,6 +122,9 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		})
 	}
 
+	if err := os.MkdirAll(filepath.Dir(tfFilePath), 0755); err != nil {
+		return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
+	}
 	tfFile, err := appendFile(tfFilePath)
 	if err != nil {
 		return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
