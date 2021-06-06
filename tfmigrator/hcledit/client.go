@@ -5,5 +5,6 @@ import (
 )
 
 type Client struct {
+	DryRun bool
 	Stderr io.Writer
 }
