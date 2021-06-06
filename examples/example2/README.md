@@ -1,4 +1,4 @@
-# Example 1
+# Example 2
 
 Run `terraform apply` to create `terraform.tfstate`.
 
