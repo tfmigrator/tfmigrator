@@ -3,7 +3,7 @@ package tfmigrator_test
 import (
 	"testing"
 
-	"github.com/suzuki-shunsuke/tfmigrator/tfmigrator"
+	"github.com/tfmigrator/tfmigrator/tfmigrator"
 )
 
 func TestValidateResourceName(t *testing.T) {
