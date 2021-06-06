@@ -13,11 +13,11 @@ Go library to migrate Terraform Configuration and State with `terraform state mv
 
 tfmigrator-sdk is Go library. On the other hand, [tfmigrator](https://github.com/suzuki-shunsuke/tfmigrator) is CLI tool.
 
-Originally we developed tfmigrator before tfmigrator-sdk.
+Originally we have been developing tfmigrator before tfmigrator-sdk.
 In tfmigrator, we define rules for migration with YAML, Go's [text/template](https://golang.org/pkg/text/template/), [expr](https://github.com/antonmedv/expr).
 So we don't have to write code with Go.
 
-But when we migrate a number of resources, it is hard to write YAML.
+But when we migrate many resources, it is hard to write YAML.
 So we started to develop tfmigrator-sdk instead of tfmigrator.
 
 tfmigrator-sdk is Go library, so we can implement the migration rules with Go.
