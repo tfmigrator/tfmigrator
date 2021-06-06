@@ -7,5 +7,5 @@ require (
 	github.com/go-playground/validator/v10 v10.6.1
 	github.com/hashicorp/hcl/v2 v2.10.0
 	github.com/minamijoyo/hcledit v0.2.0
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.4.0
 )
