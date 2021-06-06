@@ -25,7 +25,7 @@ In tfmigrator-cli, we define rules for migration with YAML, Go's [text/template]
 So we don't have to write code with Go.
 
 But when we migrate many resources, it is hard to write YAML.
-So we started to develop tfmigrator instead of tfmigrator-cli.
+So we started to develop tfmigrator as Go package instead of tfmigrator-cli.
 
 tfmigrator is Go package, so we can implement the migration rules with Go.
 In tfmigrator, we can migrate Terraform Configuration and State by implementing the interface `Planner`.
@@ -33,7 +33,7 @@ This is very simple and powerful and flexible.
 And we don't have to learn the configuration file format and expr's Language specification, so the learning cost is low.
 Using `QuickRun` function, we can implement CLI for migration quickly.
 
-And compared with tfmigrator v1.0.0, tfmigrator provides rich feature.
+And compared with tfmigrator-cli v1.0.0, tfmigrator provides rich feature.
 
 * Support to remove Resource
 * Support to update Terraform Configuration files in place
