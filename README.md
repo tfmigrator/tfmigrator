@@ -25,7 +25,8 @@ So we don't have to write code with Go.
 But when we migrate many resources, it is hard to write the configuration file.
 So we started to develop tfmigrator as Go package instead of suzuki-shunsuke/tfmigrator.
 
-This is a framework for migration and we can implement the migration rules with Go by implementing the interface [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner).
+Using this package, we can implement the migration rules with Go freely.
+By implementing the interface [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner), we can migrate resources.
 This is very simple and powerful and flexible.
 And we don't have to learn the configuration file format and expr's Language specification, so the learning cost is low.
 Using [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun) function, we can implement CLI for migration quickly.
