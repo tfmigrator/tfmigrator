@@ -6,21 +6,18 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 
 	tflog "github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator/log"
 )
 
 // QuickRun provides CLI interface to run tfmigrator quickly.
-func QuickRun(planner Planner) {
-	if err := quickRun(planner); err != nil {
+func QuickRun(ctx context.Context, planner Planner) {
+	if err := quickRun(ctx, planner); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func quickRun(planner Planner) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+func quickRun(ctx context.Context, planner Planner) error {
 	logger := &tflog.SimpleLogger{}
 
 	var dryRun bool

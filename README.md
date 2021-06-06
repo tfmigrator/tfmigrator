@@ -4,7 +4,7 @@ Go library to migrate Terraform Configuration and State with `terraform state mv
 
 ## Requirement
 
-* Go >= 1.16
+* Go
 * Terraform
 
 [hcledit](https://github.com/minamijoyo/hcledit) isn't needed.

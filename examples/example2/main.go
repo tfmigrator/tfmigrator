@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
+
 	"github.com/suzuki-shunsuke/tfmigrator-sdk/tfmigrator"
 )
 
 func main() {
-	tfmigrator.QuickRun(tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
+	tfmigrator.QuickRun(context.Background(), tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
 		if src.Address() == "null_resource.foo" {
 			return &tfmigrator.MigratedResource{
 				Dirname:        "foo",
