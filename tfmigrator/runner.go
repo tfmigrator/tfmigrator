@@ -18,9 +18,9 @@ type Runner struct {
 	Stderr       io.Writer `validate:"required"`
 	Planner      Planner   `validate:"required"`
 	Logger       log.Logger
-	HCLEdit      *hcledit.Client
-	StateReader  *tfstate.Reader
-	StateUpdater *tfstate.Updater
+	HCLEdit      *hcledit.Client  `validate:"required"`
+	StateReader  *tfstate.Reader  `validate:"required"`
+	StateUpdater *tfstate.Updater `validate:"required"`
 	Outputter    Outputter
 	DryRun       bool
 }
@@ -48,11 +48,20 @@ func (runner *Runner) SetDefault() {
 	if runner.HCLEdit == nil {
 		runner.HCLEdit = &hcledit.Client{
 			Stderr: runner.Stderr,
+			DryRun: runner.DryRun,
 		}
 	}
 	if runner.StateReader == nil {
 		runner.StateReader = &tfstate.Reader{
 			Stderr: runner.Stderr,
+		}
+	}
+	if runner.StateUpdater == nil {
+		runner.StateUpdater = &tfstate.Updater{
+			Stdout: runner.Stdout,
+			Stderr: runner.Stderr,
+			DryRun: runner.DryRun,
+			Logger: runner.Logger,
 		}
 	}
 }
@@ -80,24 +89,29 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
 
-	dryRunResult := &Result{}
-	for _, rsc := range state.Values.RootModule.Resources {
+	results := make([]Result, len(state.Values.RootModule.Resources))
+	for i, rsc := range state.Values.RootModule.Resources {
 		rsc := rsc
-		tfFilePath, ok := addressFileMap["resource."+rsc.Address]
-		if !ok {
-			continue
-		}
-		if err := runner.migrateResource(ctx, &Source{
+		tfFilePath := addressFileMap["resource."+rsc.Address]
+		src := &Source{
 			Resource:   &rsc,
 			StatePath:  opt.SourceStatePath,
 			TFFilePath: tfFilePath,
-		}, dryRunResult); err != nil {
+		}
+		migratedResource, err := runner.migrateResource(ctx, src)
+		if err != nil {
 			return fmt.Errorf("migrate a resource %s: %w", rsc.Address, err)
+		}
+		if runner.Outputter != nil {
+			results[i] = Result{
+				Source:           src,
+				MigratedResource: migratedResource,
+			}
 		}
 	}
 
 	if runner.Outputter != nil {
-		if err := runner.Outputter.Output(dryRunResult); err != nil {
+		if err := runner.Outputter.Output(results); err != nil {
 			return fmt.Errorf("output the result: %w", err)
 		}
 	}
@@ -119,21 +133,17 @@ func (runner *Runner) readState(ctx context.Context, sourceStatePath string, sta
 	return nil
 }
 
-func (runner *Runner) migrateResource(ctx context.Context, source *Source, dryRunResult *Result) error {
+func (runner *Runner) migrateResource(ctx context.Context, source *Source) (*MigratedResource, error) {
 	if err := validate.Struct(source); err != nil {
-		return fmt.Errorf("validate Source: %w", err)
+		return nil, fmt.Errorf("validate Source: %w", err)
 	}
 	migratedResource, err := runner.Planner.Plan(source)
 	if err != nil {
-		return fmt.Errorf("plan to migrate a resource: %w", err)
-	}
-	if runner.Outputter != nil {
-		dryRunResult.Add(source, migratedResource)
-		return nil
+		return nil, fmt.Errorf("plan to migrate a resource: %w", err)
 	}
 
 	if err := runner.Migrate(ctx, source, migratedResource); err != nil {
-		return fmt.Errorf("migrate a resource: %w", err)
+		return nil, fmt.Errorf("migrate a resource: %w", err)
 	}
-	return nil
+	return migratedResource, nil
 }
