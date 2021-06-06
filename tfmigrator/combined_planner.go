@@ -3,19 +3,19 @@ package tfmigrator
 import "fmt"
 
 type combinedPlanner struct {
-	migrators []Planner
+	plannters []Planner
 }
 
 // CombinePlanners creates a migrator from given migrators.
-func CombinePlanners(migrators ...Planner) Planner {
+func CombinePlanners(planners ...Planner) Planner {
 	return &combinedPlanner{
-		migrators: migrators,
+		plannters: planners,
 	}
 }
 
-func (migrator *combinedPlanner) Plan(src *Source) (*MigratedResource, error) {
-	for i, m := range migrator.migrators {
-		migratedResource, err := m.Plan(src)
+func (cplanner *combinedPlanner) Plan(src *Source) (*MigratedResource, error) {
+	for i, p := range cplanner.plannters {
+		migratedResource, err := p.Plan(src)
 		if err != nil {
 			return nil, fmt.Errorf("plan to migrate a resource by combinedPlanner (%d): %w", i, err)
 		}
