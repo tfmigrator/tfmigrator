@@ -60,6 +60,12 @@ Example
 		Planner:   planner,
 		Outputter: NewYAMLOutputter(os.Stderr),
 	}
+	if err := runner.SetDefault(); err != nil {
+		return err
+	}
+	if err := validate.Struct(runner); err != nil {
+		return fmt.Errorf("validate Runner: %w", err)
+	}
 
 	return runner.Run(ctx, &RunOpt{
 		SourceTFFilePaths: args,

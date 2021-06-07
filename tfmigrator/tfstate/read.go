@@ -2,11 +2,8 @@ package tfstate
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"os/exec"
-	"path/filepath"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -15,8 +12,9 @@ import (
 
 // Reader reads Terraform State.
 type Reader struct {
-	Stderr io.Writer
-	Logger log.Logger
+	Stderr    io.Writer
+	Logger    log.Logger
+	Terraform *tfexec.Terraform
 }
 
 func (reader *Reader) logDebug(msg string) {
@@ -28,20 +26,13 @@ func (reader *Reader) logDebug(msg string) {
 
 // TFShow gets Terraform State by `terraform show -json` command.
 func (reader *Reader) TFShow(ctx context.Context, filePath string) (*tfjson.State, error) {
-	tfCmdPath, err := exec.LookPath("terraform")
-	if err != nil {
-		return nil, errors.New("the command `terraform` isn't found: %w")
-	}
-	tf, err := tfexec.NewTerraform(filepath.Dir(filePath), tfCmdPath)
-	if err != nil {
-		return nil, fmt.Errorf("initialize Terraform exec: %w", err)
-	}
+	reader.Terraform.SetStderr(reader.Stderr)
 
 	msg := "+ terraform show -json"
 	if filePath != "" {
 		msg += " " + filePath
 		reader.logDebug(msg)
-		state, err := tf.ShowStateFile(ctx, filePath)
+		state, err := reader.Terraform.ShowStateFile(ctx, filePath)
 		if err != nil {
 			return nil, fmt.Errorf("terraform show -json %s: %w", filePath, err)
 		}
@@ -49,7 +40,7 @@ func (reader *Reader) TFShow(ctx context.Context, filePath string) (*tfjson.Stat
 	}
 
 	reader.logDebug(msg)
-	state, err := tf.Show(ctx)
+	state, err := reader.Terraform.Show(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("terraform show -json: %w", err)
 	}
