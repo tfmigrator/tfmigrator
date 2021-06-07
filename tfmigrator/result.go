@@ -1,6 +1,9 @@
 package tfmigrator
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"strings"
+)
 
 // Result contains source Terraform Resource and the plan how the resource is migrated.
 // Result is used to output the result by Outputter.
@@ -34,4 +37,12 @@ func (rsc *MigratedResource) StatePath() string {
 // TFFilePath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
 func (rsc *MigratedResource) TFFilePath() string {
 	return filepath.Join(rsc.Dirname, rsc.TFFileBasename)
+}
+
+// HCLAddress returns a resource address like `resource.null_resource.foo`.
+func (rsc *MigratedResource) HCLAddress() string {
+	if strings.HasPrefix(rsc.Address, "module.") {
+		return rsc.Address
+	}
+	return "resource." + rsc.Address
 }
