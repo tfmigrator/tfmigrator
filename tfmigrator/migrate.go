@@ -100,11 +100,15 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		// address is changed and isn't empty
 		if src.TFFilePath == migratedResource.TFFilePath() || migratedResource.TFFilePath() == "" {
 			// Terraform Configuration file path isn't changed.
+			filePath := migratedResource.TFFilePath()
+			if filePath == "" {
+				filePath = src.TFFilePath
+			}
 			return client.MoveBlock(&hcledit.MoveBlockOpt{ //nolint:wrapcheck
-				From:     "resource." + src.Address(),
-				To:       "resource." + migratedResource.Address,
+				From:     src.HCLAddress(),
+				To:       migratedResource.HCLAddress(),
 				Update:   true,
-				FilePath: migratedResource.TFFilePath(),
+				FilePath: filePath,
 				Stdout:   runner.Stdout,
 			})
 		}
@@ -124,8 +128,8 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		defer tfFile.Close()
 
 		if err := client.MoveBlock(&hcledit.MoveBlockOpt{
-			From:     "resource." + src.Address(),
-			To:       "resource." + migratedResource.Address,
+			From:     src.HCLAddress(),
+			To:       migratedResource.HCLAddress(),
 			FilePath: "-",
 			Stdin:    buf,
 			Stdout:   tfFile,

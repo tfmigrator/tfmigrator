@@ -89,7 +89,7 @@ type RunOpt struct {
 }
 
 // Run reads Terraform Configuration and State and migrate them.
-func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
+func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error { //nolint:funlen,cyclop
 	if err := validate.Struct(opt); err != nil {
 		return fmt.Errorf("validate RunOpt: %w", err)
 	}
@@ -104,8 +104,8 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
 
-	results := make([]Result, len(state.Values.RootModule.Resources))
-	for i, rsc := range state.Values.RootModule.Resources {
+	results := make([]Result, 0, len(state.Values.RootModule.Resources)+len(state.Values.RootModule.ChildModules))
+	for _, rsc := range state.Values.RootModule.Resources {
 		tfFilePath := addressFileMap["resource."+rsc.Address]
 		src := &Source{
 			Resource:   rsc,
@@ -117,10 +117,30 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 			return fmt.Errorf("migrate a resource %s: %w", rsc.Address, err)
 		}
 		if runner.Outputter != nil {
-			results[i] = Result{
+			results = append(results, Result{
 				Source:           src,
 				MigratedResource: migratedResource,
-			}
+			})
+		}
+	}
+
+	// update module addresses
+	for _, child := range state.Values.RootModule.ChildModules {
+		tfFilePath := addressFileMap[child.Address]
+		src := &Source{
+			Module:     child,
+			StatePath:  opt.SourceStatePath,
+			TFFilePath: tfFilePath,
+		}
+		migratedResource, err := runner.migrateResource(ctx, src)
+		if err != nil {
+			return fmt.Errorf("migrate a module %s: %w", child.Address, err)
+		}
+		if runner.Outputter != nil {
+			results = append(results, Result{
+				Source:           src,
+				MigratedResource: migratedResource,
+			})
 		}
 	}
 
