@@ -23,9 +23,11 @@ func quickRun(ctx context.Context, planner Planner) error {
 	var dryRun bool
 	var help bool
 	var logLevel string
+	var statePath string
 	flag.BoolVar(&dryRun, "dry-run", false, "dry run")
 	flag.BoolVar(&help, "help", false, "show help message")
 	flag.StringVar(&logLevel, "log-level", "info", "log level")
+	flag.StringVar(&statePath, "state", "", "source State file path")
 	flag.Parse()
 	args := flag.Args()
 
@@ -34,7 +36,7 @@ func quickRun(ctx context.Context, planner Planner) error {
 
 Usage
   tfmigrator help
-  tfmigrator [-help] [-dry-run] [-log-level debug] [Terraform Configuration file path ...]
+  tfmigrator [-help] [-dry-run] [-log-level debug] [-state ""] [Terraform Configuration file path ...]
 
 Example
 
@@ -61,5 +63,6 @@ Example
 
 	return runner.Run(ctx, &RunOpt{
 		SourceTFFilePaths: args,
+		SourceStatePath:   statePath,
 	})
 }
