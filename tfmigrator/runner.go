@@ -2,10 +2,13 @@ package tfmigrator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/tfmigrator/tfmigrator/tfmigrator/hcledit"
 	"github.com/tfmigrator/tfmigrator/tfmigrator/log"
 	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
@@ -25,17 +28,8 @@ type Runner struct {
 	DryRun       bool
 }
 
-// Validate sets default values and validates runner.
-func (runner *Runner) Validate() error {
-	runner.SetDefault()
-	if err := validate.Struct(runner); err != nil {
-		return fmt.Errorf("validate Runner: %w", err)
-	}
-	return nil
-}
-
 // SetDefault sets the default values to Runner.
-func (runner *Runner) SetDefault() {
+func (runner *Runner) SetDefault() error { //nolint:cyclop
 	if runner.Stdin == nil {
 		runner.Stdin = os.Stdin
 	}
@@ -66,6 +60,23 @@ func (runner *Runner) SetDefault() {
 			Logger: runner.Logger,
 		}
 	}
+	if runner.StateReader.Terraform == nil || runner.StateUpdater.Terraform == nil {
+		wd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("get the current directory: %w", err)
+		}
+		tfCmdPath, err := exec.LookPath("terraform")
+		if err != nil {
+			return errors.New("the command `terraform` isn't found: %w")
+		}
+		tf, err := tfexec.NewTerraform(wd, tfCmdPath)
+		if err != nil {
+			return fmt.Errorf("initialize Terraform exec: %w", err)
+		}
+		runner.StateReader.Terraform = tf
+		runner.StateUpdater.Terraform = tf
+	}
+	return nil
 }
 
 // RunOpt is an option of Run method.
@@ -82,11 +93,10 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	if err := validate.Struct(opt); err != nil {
 		return fmt.Errorf("validate RunOpt: %w", err)
 	}
-	runner.SetDefault()
 
-	state := &tfstate.State{}
-	if err := runner.readState(ctx, opt.SourceStatePath, state); err != nil {
-		return err
+	state, err := runner.StateReader.TFShow(ctx, opt.SourceStatePath)
+	if err != nil {
+		return fmt.Errorf("read Terraform State: %w", err)
 	}
 
 	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceTFFilePaths...)
@@ -96,10 +106,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 
 	results := make([]Result, len(state.Values.RootModule.Resources))
 	for i, rsc := range state.Values.RootModule.Resources {
-		rsc := rsc
 		tfFilePath := addressFileMap["resource."+rsc.Address]
 		src := &Source{
-			Resource:   &rsc,
+			Resource:   rsc,
 			StatePath:  opt.SourceStatePath,
 			TFFilePath: tfFilePath,
 		}
@@ -121,13 +130,6 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		}
 	}
 
-	return nil
-}
-
-func (runner *Runner) readState(ctx context.Context, sourceStatePath string, state *tfstate.State) error {
-	if err := runner.StateReader.ReadByCmd(ctx, sourceStatePath, state); err != nil {
-		return fmt.Errorf("read Terraform State by command: %w", err)
-	}
 	return nil
 }
 

@@ -2,16 +2,11 @@ package tfstate
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-exec/tfexec"
 )
-
-func removeStateArgs(address string, opt *RemoveOpt) []string {
-	args := []string{"state", "rm"}
-	if opt.StatePath != "" {
-		args = append(args, "-state", opt.StatePath)
-	}
-
-	return append(args, address)
-}
 
 // RemoveOpt is an option of MoveState function.
 type RemoveOpt struct {
@@ -20,5 +15,22 @@ type RemoveOpt struct {
 
 // Remove runs `terraform state rm`.
 func (updater *Updater) Remove(ctx context.Context, address string, opt *RemoveOpt) error {
-	return updater.update(ctx, removeStateArgs(address, opt)...)
+	cmd := []string{"terraform", "state", "rm"}
+	if opt.StatePath != "" {
+		cmd = append(cmd, "-state", opt.StatePath)
+	}
+	cmd = append(cmd, address)
+	if updater.DryRun {
+		updater.logInfo("[DRYRUN] + " + strings.Join(cmd, " "))
+		return nil
+	}
+
+	opts := []tfexec.StateRmCmdOption{}
+	if opt.StatePath != "" {
+		opts = append(opts, tfexec.State(opt.StatePath)) //nolint:staticcheck
+	}
+	if err := updater.Terraform.StateRm(ctx, address, opts...); err != nil {
+		return fmt.Errorf("terraform state rm: %w", err)
+	}
+	return nil
 }
