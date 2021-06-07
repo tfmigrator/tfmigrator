@@ -1,10 +1,10 @@
 package tfmigrator
 
-import "github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
+import tfjson "github.com/hashicorp/terraform-json"
 
 // Source is a source Terraform resource.
 type Source struct {
-	Resource *tfstate.Resource
+	Resource *tfjson.StateResource
 	// If the resource isn't found in Terraform Configuration files, TFFilePath is empty
 	TFFilePath string
 	StatePath  string

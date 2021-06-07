@@ -84,9 +84,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 	}
 	runner.SetDefault()
 
-	state := &tfstate.State{}
-	if err := runner.readState(ctx, opt.SourceStatePath, state); err != nil {
-		return err
+	state, err := runner.StateReader.TFShow(ctx, opt.SourceStatePath)
+	if err != nil {
+		return fmt.Errorf("read Terraform State: %w", err)
 	}
 
 	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceTFFilePaths...)
@@ -96,10 +96,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 
 	results := make([]Result, len(state.Values.RootModule.Resources))
 	for i, rsc := range state.Values.RootModule.Resources {
-		rsc := rsc
 		tfFilePath := addressFileMap["resource."+rsc.Address]
 		src := &Source{
-			Resource:   &rsc,
+			Resource:   rsc,
 			StatePath:  opt.SourceStatePath,
 			TFFilePath: tfFilePath,
 		}
@@ -121,13 +120,6 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 		}
 	}
 
-	return nil
-}
-
-func (runner *Runner) readState(ctx context.Context, sourceStatePath string, state *tfstate.State) error {
-	if err := runner.StateReader.ReadByCmd(ctx, sourceStatePath, state); err != nil {
-		return fmt.Errorf("read Terraform State by command: %w", err)
-	}
 	return nil
 }
 

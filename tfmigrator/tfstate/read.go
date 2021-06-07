@@ -1,15 +1,15 @@
 package tfstate
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
-	"time"
+	"path/filepath"
 
-	"github.com/Songmu/timeout"
+	"github.com/hashicorp/terraform-exec/tfexec"
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/tfmigrator/tfmigrator/tfmigrator/log"
 )
 
@@ -27,48 +27,31 @@ func (reader *Reader) logDebug(msg string) {
 }
 
 // TFShow gets Terraform State by `terraform show -json` command.
-func (reader *Reader) TFShow(ctx context.Context, filePath string, out io.Writer) error {
-	args := []string{"show", "-json"}
-	if filePath != "" {
-		args = append(args, filePath)
+func (reader *Reader) TFShow(ctx context.Context, filePath string) (*tfjson.State, error) {
+	tfCmdPath, err := exec.LookPath("terraform")
+	if err != nil {
+		return nil, errors.New("the command `terraform` isn't found: %w")
 	}
-	cmd := exec.Command("terraform", args...)
-	cmd.Stdout = out
-	cmd.Stderr = reader.Stderr
-	tioStateMv := timeout.Timeout{
-		Cmd:      cmd,
-		Duration: 1 * time.Minute,
+	tf, err := tfexec.NewTerraform(filepath.Dir(filePath), tfCmdPath)
+	if err != nil {
+		return nil, fmt.Errorf("initialize Terraform exec: %w", err)
 	}
 
 	msg := "+ terraform show -json"
 	if filePath != "" {
 		msg += " " + filePath
+		reader.logDebug(msg)
+		state, err := tf.ShowStateFile(ctx, filePath)
+		if err != nil {
+			return nil, fmt.Errorf("terraform show -json %s: %w", filePath, err)
+		}
+		return state, nil
 	}
+
 	reader.logDebug(msg)
-
-	status, err := tioStateMv.RunContext(ctx)
+	state, err := tf.Show(ctx)
 	if err != nil {
-		return fmt.Errorf("terraform show -json %s: %w", filePath, err)
+		return nil, fmt.Errorf("terraform show -json: %w", err)
 	}
-	if status.Code != 0 {
-		return fmt.Errorf("terraform show -json %s: Exit Code %d", filePath, status.Code)
-	}
-	return nil
-}
-
-// ReadByCmd reads Terraform State by `terraform show -json` command.
-func (reader *Reader) ReadByCmd(ctx context.Context, filePath string, state *State) error {
-	buf := &bytes.Buffer{}
-	if err := reader.TFShow(ctx, filePath, buf); err != nil {
-		return err
-	}
-	return Read(buf, state)
-}
-
-// Read reads a file into state.
-func Read(file io.Reader, state *State) error {
-	if err := json.NewDecoder(file).Decode(state); err != nil {
-		return fmt.Errorf("parse a state file as JSON: %w", err)
-	}
-	return nil
+	return state, nil
 }
