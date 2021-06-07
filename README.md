@@ -8,12 +8,49 @@
 
 Go library to migrate Terraform Configuration and State with `terraform state mv` and `terraform state rm` command and [hcledit](https://github.com/minamijoyo/hcledit).
 
+Using tfmigrator, we can do the following.
+
+* migrate resource address
+  * e.g. `null_resource.foo` => `null_resource.bar`
+    * `terraform state mv null_resource.foo null_resource.bar`
+    * `hcledit block mv -u -f main.tf resource.null_resource.foo resource.null_resource.bar`
+  * e.g. `module.foo` => `module.bar`
+* move resources in a Terraform Configuration file and State to the other file and State
+  * e.g. `terraform.tfstate` => `foo/terraform.tfstate`
+  * e.g. `main.tf` => `foo/main.tf`
+* remove resources from State and Terraform Configuration
+  * e.g. `terraform state rm null_resource.foo`
+  * e.g. `hcledit block rm -u -f main.tf resource.null_resource.foo`
+
+On the other hand, tfmigrator doesn't support the following things.
+
+* change resource fields (attributes and blocks)
+  * e.g. `hcledit attribute`
+
 ## Requirement
 
 * Go
 * Terraform
 
 [hcledit](https://github.com/minamijoyo/hcledit) isn't needed.
+
+## Example
+
+Please see [examples](examples).
+
+## Document
+
+https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator
+
+## Getting Started
+
+[The example](https://github.com/tfmigrator/tfmigrator/blob/main/examples/example1/main.go) and [README](https://github.com/tfmigrator/tfmigrator/tree/main/examples/example1) tell us how to use tfmigrator and how tfmigrator works.
+We can implement a command for migration with Go simply.
+About the detail of [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner), please see the document of [Source](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Source) and [MigratedResource](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#MigratedResource).
+
+[QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun) provides a high level API,
+so if we use [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun), we don't have to know about other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
+But if we need low level API, please check other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
 
 ## Compared with suzuki-shunsuke/tfmigrator
 
@@ -37,10 +74,8 @@ And compared with suzuki-shunsuke/tfmigrator v1.0.0, this package provides rich 
 * Support to remove Resource
 * Support to update Terraform Configuration files in place
 * Don't have to install [hcledit](https://github.com/minamijoyo/hcledit) command
-
-## Example
-
-Please see [examples](examples).
+* Support the migration of Module address
+* etc
 
 ## LICENSE
 
