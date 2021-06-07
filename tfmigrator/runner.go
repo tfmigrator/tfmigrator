@@ -125,15 +125,8 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error {
 }
 
 func (runner *Runner) readState(ctx context.Context, sourceStatePath string, state *tfstate.State) error {
-	if sourceStatePath == "" {
-		// read state by command
-		if err := runner.StateReader.ReadByCmd(ctx, state); err != nil {
-			return fmt.Errorf("read Terraform State by command: %w", err)
-		}
-	} else {
-		if err := tfstate.ReadFromFile(sourceStatePath, state); err != nil {
-			return fmt.Errorf("read Terraform State from a file %s: %w", sourceStatePath, err)
-		}
+	if err := runner.StateReader.ReadByCmd(ctx, sourceStatePath, state); err != nil {
+		return fmt.Errorf("read Terraform State by command: %w", err)
 	}
 	return nil
 }

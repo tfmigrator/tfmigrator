@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/Songmu/timeout"
@@ -30,8 +27,12 @@ func (reader *Reader) logDebug(msg string) {
 }
 
 // TFShow gets Terraform State by `terraform show -json` command.
-func (reader *Reader) TFShow(ctx context.Context, out io.Writer) error {
-	cmd := exec.Command("terraform", "show", "-json")
+func (reader *Reader) TFShow(ctx context.Context, filePath string, out io.Writer) error {
+	args := []string{"show", "-json"}
+	if filePath != "" {
+		args = append(args, filePath)
+	}
+	cmd := exec.Command("terraform", args...)
 	cmd.Stdout = out
 	cmd.Stderr = reader.Stderr
 	tioStateMv := timeout.Timeout{
@@ -39,35 +40,29 @@ func (reader *Reader) TFShow(ctx context.Context, out io.Writer) error {
 		Duration: 1 * time.Minute,
 	}
 
-	reader.logDebug("+ terraform show -json")
+	msg := "+ terraform show -json"
+	if filePath != "" {
+		msg += " " + filePath
+	}
+	reader.logDebug(msg)
 
 	status, err := tioStateMv.RunContext(ctx)
 	if err != nil {
-		return fmt.Errorf("terraform show -json: %w", err)
+		return fmt.Errorf("terraform show -json %s: %w", filePath, err)
 	}
 	if status.Code != 0 {
-		return errors.New("terraform show -json: exit code != 0: " + strconv.Itoa(status.Code))
+		return fmt.Errorf("terraform show -json %s: Exit Code %d", filePath, status.Code)
 	}
 	return nil
 }
 
 // ReadByCmd reads Terraform State by `terraform show -json` command.
-func (reader *Reader) ReadByCmd(ctx context.Context, state *State) error {
+func (reader *Reader) ReadByCmd(ctx context.Context, filePath string, state *State) error {
 	buf := &bytes.Buffer{}
-	if err := reader.TFShow(ctx, buf); err != nil {
+	if err := reader.TFShow(ctx, filePath, buf); err != nil {
 		return err
 	}
 	return Read(buf, state)
-}
-
-// ReadFromFile opens a Terraform State file and reads it into state.
-func ReadFromFile(statePath string, state *State) error {
-	stateFile, err := os.Open(statePath)
-	if err != nil {
-		return fmt.Errorf("open a state file %s: %w", statePath, err)
-	}
-	defer stateFile.Close()
-	return Read(stateFile, state)
 }
 
 // Read reads a file into state.
