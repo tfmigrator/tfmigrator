@@ -13,7 +13,22 @@ $ cat main.tf
 resource "null_resource" "foo" {}
 ```
 
-Run dry run.
+## Help
+
+```console
+$ go run main.go -help
+tfmigrator - Migrate Terraform Configuration and State
+
+Usage
+  tfmigrator help
+  tfmigrator [-help] [-dry-run] [-log-level debug] [-state ""] [Terraform Configuration file path ...]
+
+Example
+
+  $ ls *.tf | xargs tfmigrator -dry-run -log-level debug
+```
+
+## Dry Run
 
 ```console
 $ go run main.go -dry-run
@@ -24,7 +39,7 @@ migrated_resources:
 not_migrated_resources: []
 ```
 
-Run.
+## Migrate
 
 ```console
 $ go run main.go
