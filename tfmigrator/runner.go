@@ -104,6 +104,15 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error { //nolint:fun
 		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
 
+	if state.Values == nil {
+		runner.Logger.Info("state.Values is nil")
+		return nil
+	}
+	if state.Values.RootModule == nil {
+		runner.Logger.Info("state.Values.RootModule is nil")
+		return nil
+	}
+
 	results := make([]Result, 0, len(state.Values.RootModule.Resources)+len(state.Values.RootModule.ChildModules))
 	for _, rsc := range state.Values.RootModule.Resources {
 		tfFilePath := addressFileMap["resource."+rsc.Address]
