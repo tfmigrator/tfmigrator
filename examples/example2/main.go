@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/tfmigrator/tfmigrator/tfmigrator"
 )
 
 func main() {
-	tfmigrator.QuickRun(context.Background(), tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
+	if err := tfmigrator.QuickRun(context.Background(), tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
 		if src.Address() == "null_resource.foo" {
 			return &tfmigrator.MigratedResource{
 				Dirname:        "foo",
@@ -28,5 +29,7 @@ func main() {
 			}, nil
 		}
 		return nil, nil
-	}))
+	})); err != nil {
+		log.Fatal(err)
+	}
 }

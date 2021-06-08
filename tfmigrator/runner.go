@@ -79,7 +79,7 @@ func (runner *Runner) SetDefault() error { //nolint:cyclop
 	return nil
 }
 
-// RunOpt is an option of Run method.
+// RunOpt is an option of Runner#Run method.
 type RunOpt struct {
 	// SourceStatePath is the file path to State.
 	// If SourceStatePath is empty, State is read by `terraform show -json` command.
