@@ -77,6 +77,10 @@ And compared with suzuki-shunsuke/tfmigrator v1.0.0, this package provides rich 
 * Support the migration of Module address
 * etc
 
+## Release Note (Change log)
+
+https://github.com/tfmigrator/tfmigrator/releases
+
 ## LICENSE
 
 [MIT](LICENSE)
