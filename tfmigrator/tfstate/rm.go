@@ -25,6 +25,7 @@ func (updater *Updater) Remove(ctx context.Context, address string, opt *RemoveO
 		return nil
 	}
 
+	updater.logInfo("+ " + strings.Join(cmd, " "))
 	opts := []tfexec.StateRmCmdOption{}
 	if opt.StatePath != "" {
 		opts = append(opts, tfexec.State(opt.StatePath)) //nolint:staticcheck
