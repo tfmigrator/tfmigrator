@@ -23,6 +23,9 @@ removed_resources: []
 not_migrated_resources:
 - address: null_resource.foo
   file_path: main.tf
+  attributes:
+    id: "8064984026557147891"
+    triggers: null
 ```
 
 Run.
@@ -41,4 +44,7 @@ removed_resources: []
 not_migrated_resources:
 - address: null_resource.foo
   file_path: main.tf
+  attributes:
+    id: "8064984026557147891"
+    triggers: null
 ```
