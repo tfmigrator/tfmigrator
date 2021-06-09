@@ -38,10 +38,14 @@ func (outputter *YAMLOutputter) format(results []Result) *yamlResults {
 		rsc := result.MigratedResource
 		src := result.Source
 		if rsc == nil {
-			yr.NotMigratedResources = append(yr.NotMigratedResources, yamlSourceResult{
+			a := yamlNotMigratedResult{
 				Address:  src.Address(),
 				FilePath: src.TFFilePath,
-			})
+			}
+			if src.Resource != nil {
+				a.Attributes = src.Resource.AttributeValues
+			}
+			yr.NotMigratedResources = append(yr.NotMigratedResources, a)
 			continue
 		}
 		if rsc.Removed {
@@ -64,9 +68,9 @@ func (outputter *YAMLOutputter) format(results []Result) *yamlResults {
 }
 
 type yamlResults struct {
-	MigratedResources    []yamlResult       `yaml:"migrated_resources"`
-	RemovedResources     []yamlSourceResult `yaml:"removed_resources"`
-	NotMigratedResources []yamlSourceResult `yaml:"not_migrated_resources"`
+	MigratedResources    []yamlResult            `yaml:"migrated_resources"`
+	RemovedResources     []yamlSourceResult      `yaml:"removed_resources"`
+	NotMigratedResources []yamlNotMigratedResult `yaml:"not_migrated_resources"`
 }
 
 type yamlResult struct {
@@ -81,4 +85,10 @@ type yamlResult struct {
 type yamlSourceResult struct {
 	Address  string
 	FilePath string `yaml:"file_path,omitempty"`
+}
+
+type yamlNotMigratedResult struct {
+	Address    string
+	FilePath   string                 `yaml:"file_path,omitempty"`
+	Attributes map[string]interface{} `yaml:",omitempty"`
 }
