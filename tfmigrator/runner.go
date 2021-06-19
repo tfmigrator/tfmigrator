@@ -16,7 +16,6 @@ import (
 
 // Runner provides high level API to migrate Terraform Configuration and State.
 type Runner struct {
-	Stdin        io.Reader `validate:"required"`
 	Stdout       io.Writer `validate:"required"`
 	Stderr       io.Writer `validate:"required"`
 	Planner      Planner   `validate:"required"`
@@ -31,9 +30,6 @@ type Runner struct {
 
 // SetDefault sets the default values to Runner.
 func (runner *Runner) SetDefault() error { //nolint:cyclop
-	if runner.Stdin == nil {
-		runner.Stdin = os.Stdin
-	}
 	if runner.Stdout == nil {
 		runner.Stdout = os.Stdout
 	}
