@@ -33,6 +33,9 @@ type MigratedResource struct {
 
 // StatePath returns a file path to Terraform State file.
 func (rsc *MigratedResource) StatePath() string {
+	if rsc.Dirname != "" && rsc.StateBasename == "" {
+		return filepath.Join(rsc.Dirname, "terraform.tfstate")
+	}
 	return filepath.Join(rsc.Dirname, rsc.StateBasename)
 }
 
