@@ -50,6 +50,12 @@ func (runner *BatchRunner) Run(ctx context.Context, opt *RunOpt) error { //nolin
 	}
 
 	for _, result := range results {
+		if result.Source.HCLFilePath == "" {
+			result.Source.HCLFilePath = addressFileMap[result.Source.HCLAddress()]
+		}
+		if result.Source.StatePath == "" {
+			result.Source.StatePath = opt.SourceStatePath
+		}
 		if err := runner.Migrator.Migrate(ctx, result.Source, result.MigratedResource); err != nil {
 			return fmt.Errorf("migrate a resource: %w", err)
 		}
