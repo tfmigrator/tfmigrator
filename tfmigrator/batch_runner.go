@@ -9,6 +9,7 @@ import (
 	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
+// BatchRunner migrates Terraform Configuration and State with BatchPlanner.
 type BatchRunner struct {
 	Planner     BatchPlanner `validate:"required"`
 	Logger      log.Logger

@@ -11,8 +11,7 @@ import (
 //   -log-level
 //   -state - source state file path
 //   args - Terraform Configuration file paths
-// QuickRunBatch is a simple helper function and is designed to implement CLI easily.
-// If you want to customize QuickRunBatch, you can use other low level API like `Runner`.
+// Compared with QuickRun, QuickRunBatch is a low level API.
 func QuickRunBatch(ctx context.Context, planner BatchPlanner) error {
 	return quickRun(ctx, planner, nil)
 }
