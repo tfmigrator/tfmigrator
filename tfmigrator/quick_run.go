@@ -15,31 +15,15 @@ import (
 	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
-// QuickRun provides CLI interface to run tfmigrator quickly.
-// `flag` package is used.
-//   -help
-//   -dry-run
-//   -log-level
-//   -state - source state file path
-//   args - Terraform Configuration file paths
-// QuickRun is a simple helper function and is designed to implement CLI easily.
-// If you want to customize QuickRun, you can use other low level API like `Runner`.
-func QuickRun(ctx context.Context, planner Planner) error { //nolint:funlen
-	logger := &tflog.SimpleLogger{}
+type cliArgs struct {
+	DryRun    bool
+	Help      bool
+	LogLevel  string
+	StatePath string
+}
 
-	var dryRun bool
-	var help bool
-	var logLevel string
-	var statePath string
-	flag.BoolVar(&dryRun, "dry-run", false, "dry run")
-	flag.BoolVar(&help, "help", false, "show help message")
-	flag.StringVar(&logLevel, "log-level", "info", "log level")
-	flag.StringVar(&statePath, "state", "", "source State file path")
-	flag.Parse()
-	args := flag.Args()
-
-	if help || (len(args) != 0 && args[0] == "help") {
-		fmt.Fprint(os.Stderr, `tfmigrator - Migrate Terraform Configuration and State
+func showCLIHelp() {
+	fmt.Fprint(os.Stderr, `tfmigrator - Migrate Terraform Configuration and State
 
 Usage
   tfmigrator help
@@ -49,6 +33,38 @@ Example
 
   $ ls *.tf | xargs tfmigrator -dry-run -log-level debug
 `)
+}
+
+func parseArgs() *cliArgs {
+	cArgs := &cliArgs{}
+	flag.BoolVar(&cArgs.DryRun, "dry-run", false, "dry run")
+	flag.BoolVar(&cArgs.Help, "help", false, "show help message")
+	flag.StringVar(&cArgs.LogLevel, "log-level", "info", "log level")
+	flag.StringVar(&cArgs.StatePath, "state", "", "source State file path")
+	flag.Parse()
+	return cArgs
+}
+
+// QuickRun provides CLI interface to run tfmigrator quickly.
+// `flag` package is used.
+//   -help
+//   -dry-run
+//   -log-level
+//   -state - source state file path
+//   args - Terraform Configuration file paths
+// QuickRun is a simple helper function and is designed to implement CLI easily.
+// If you want to customize QuickRun, you can use other low level API like `Runner`.
+func QuickRun(ctx context.Context, planner Planner) error {
+	return quickRun(ctx, nil, planner)
+}
+
+func quickRun(ctx context.Context, batchPlanner BatchPlanner, planner Planner) error { //nolint:funlen,cyclop
+	logger := &tflog.SimpleLogger{}
+	cArgs := parseArgs()
+	args := flag.Args()
+
+	if cArgs.Help || (len(args) != 0 && args[0] == "help") {
+		showCLIHelp()
 		return nil
 	}
 
@@ -57,8 +73,8 @@ Example
 		return nil
 	}
 
-	if err := logger.SetLogLevel(logLevel); err != nil {
-		return fmt.Errorf("set the log level (%s): %w", logLevel, err)
+	if err := logger.SetLogLevel(cArgs.LogLevel); err != nil {
+		return fmt.Errorf("set the log level (%s): %w", cArgs.LogLevel, err)
 	}
 
 	wd, err := os.Getwd()
@@ -75,9 +91,44 @@ Example
 	}
 
 	editor := &hcledit.Client{
-		DryRun: dryRun,
+		DryRun: cArgs.DryRun,
 		Stderr: os.Stderr,
 		Logger: logger,
+	}
+
+	if planner == nil {
+		runner := &BatchRunner{
+			Planner: batchPlanner,
+			Logger:  logger,
+			HCLEdit: editor,
+			StateReader: &tfstate.Reader{
+				Stderr:    os.Stderr,
+				Logger:    logger,
+				Terraform: tf,
+			},
+			Outputter: NewYAMLOutputter(os.Stderr),
+			Migrator: &Migrator{
+				Stdout:  os.Stdout,
+				DryRun:  cArgs.DryRun,
+				HCLEdit: editor,
+				StateUpdater: &tfstate.Updater{
+					Stdout:    os.Stdout,
+					Stderr:    os.Stderr,
+					DryRun:    cArgs.DryRun,
+					Logger:    logger,
+					Terraform: tf,
+				},
+			},
+			DryRun: cArgs.DryRun,
+		}
+		if err := validate.Struct(runner); err != nil {
+			return fmt.Errorf("validate Runner: %w", err)
+		}
+
+		return runner.Run(ctx, &RunOpt{
+			SourceHCLFilePaths: args,
+			SourceStatePath:    cArgs.StatePath,
+		})
 	}
 
 	runner := &Runner{
@@ -92,17 +143,17 @@ Example
 		Outputter: NewYAMLOutputter(os.Stderr),
 		Migrator: &Migrator{
 			Stdout:  os.Stdout,
-			DryRun:  dryRun,
+			DryRun:  cArgs.DryRun,
 			HCLEdit: editor,
 			StateUpdater: &tfstate.Updater{
 				Stdout:    os.Stdout,
 				Stderr:    os.Stderr,
-				DryRun:    dryRun,
+				DryRun:    cArgs.DryRun,
 				Logger:    logger,
 				Terraform: tf,
 			},
 		},
-		DryRun: dryRun,
+		DryRun: cArgs.DryRun,
 	}
 	if err := validate.Struct(runner); err != nil {
 		return fmt.Errorf("validate Runner: %w", err)
@@ -110,6 +161,6 @@ Example
 
 	return runner.Run(ctx, &RunOpt{
 		SourceHCLFilePaths: args,
-		SourceStatePath:    statePath,
+		SourceStatePath:    cArgs.StatePath,
 	})
 }
