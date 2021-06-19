@@ -24,8 +24,8 @@ func (reader *Reader) logDebug(msg string) {
 	reader.Logger.Debug(msg)
 }
 
-// TFShow gets Terraform State by `terraform show -json` command.
-func (reader *Reader) TFShow(ctx context.Context, filePath string) (*tfjson.State, error) {
+// Read gets Terraform State by `terraform show -json` command.
+func (reader *Reader) Read(ctx context.Context, filePath string) (*tfjson.State, error) {
 	reader.Terraform.SetStderr(reader.Stderr)
 
 	msg := "+ terraform show -json"

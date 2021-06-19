@@ -6,9 +6,9 @@ import tfjson "github.com/hashicorp/terraform-json"
 type Source struct {
 	Resource *tfjson.StateResource
 	Module   *tfjson.StateModule
-	// If the resource isn't found in Terraform Configuration files, TFFilePath is empty
-	TFFilePath string
-	StatePath  string
+	// If the resource isn't found in Terraform Configuration files, HCLFilePath is empty
+	HCLFilePath string
+	StatePath   string
 }
 
 // Address returns a resource address like `null_resource.foo`.

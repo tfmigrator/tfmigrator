@@ -11,16 +11,16 @@ func main() {
 	if err := tfmigrator.QuickRun(context.Background(), tfmigrator.NewPlanner(func(src *tfmigrator.Source) (*tfmigrator.MigratedResource, error) {
 		if src.Address() == "null_resource.foo" {
 			return &tfmigrator.MigratedResource{
-				Dirname:        "foo",
-				StateBasename:  "terraform.tfstate",
-				TFFileBasename: "main.tf",
+				Dirname:         "foo",
+				StateBasename:   "terraform.tfstate",
+				HCLFileBasename: "main.tf",
 			}, nil
 		}
 		if src.Address() == "null_resource.zoo" {
 			return &tfmigrator.MigratedResource{
-				Dirname:        "foo",
-				StateBasename:  "terraform.tfstate",
-				TFFileBasename: "main.tf",
+				Dirname:         "foo",
+				StateBasename:   "terraform.tfstate",
+				HCLFileBasename: "main.tf",
 			}, nil
 		}
 		if src.Address() == "null_resource.bar" {

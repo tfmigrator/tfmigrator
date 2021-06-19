@@ -40,7 +40,7 @@ func (outputter *YAMLOutputter) format(results []Result) *yamlResults {
 		if rsc == nil {
 			a := yamlNotMigratedResult{
 				Address:  src.Address(),
-				FilePath: src.TFFilePath,
+				FilePath: src.HCLFilePath,
 			}
 			if src.Resource != nil {
 				a.Attributes = src.Resource.AttributeValues
@@ -51,17 +51,17 @@ func (outputter *YAMLOutputter) format(results []Result) *yamlResults {
 		if rsc.Removed {
 			yr.RemovedResources = append(yr.RemovedResources, yamlSourceResult{
 				Address:  src.Address(),
-				FilePath: src.TFFilePath,
+				FilePath: src.HCLFilePath,
 			})
 			continue
 		}
 		yr.MigratedResources = append(yr.MigratedResources, yamlResult{
-			SourceAddress:     src.Address(),
-			SourceTFFilePath:  src.TFFilePath,
-			NewAddress:        rsc.Address,
-			NewTFFileBasename: rsc.TFFileBasename,
-			Dirname:           rsc.Dirname,
-			StateBasename:     rsc.StateBasename,
+			SourceAddress:      src.Address(),
+			SourceHCLFilePath:  src.HCLFilePath,
+			NewAddress:         rsc.Address,
+			NewHCLFileBasename: rsc.HCLFileBasename,
+			Dirname:            rsc.Dirname,
+			StateBasename:      rsc.StateBasename,
 		})
 	}
 	return yr
@@ -74,12 +74,12 @@ type yamlResults struct {
 }
 
 type yamlResult struct {
-	SourceAddress     string `yaml:"source_address"`
-	SourceTFFilePath  string `yaml:"source_tf_file_path,omitempty"`
-	NewAddress        string `yaml:"new_address,omitempty"`
-	NewTFFileBasename string `yaml:"new_tf_file_basename,omitempty"`
-	Dirname           string `yaml:"dirname,omitempty"`
-	StateBasename     string `yaml:"state_basename,omitempty"`
+	SourceAddress      string `yaml:"source_address"`
+	SourceHCLFilePath  string `yaml:"source_tf_file_path,omitempty"`
+	NewAddress         string `yaml:"new_address,omitempty"`
+	NewHCLFileBasename string `yaml:"new_tf_file_basename,omitempty"`
+	Dirname            string `yaml:"dirname,omitempty"`
+	StateBasename      string `yaml:"state_basename,omitempty"`
 }
 
 type yamlSourceResult struct {

@@ -70,7 +70,7 @@ Example
 	}
 
 	return runner.Run(ctx, &RunOpt{
-		SourceTFFilePaths: args,
-		SourceStatePath:   statePath,
+		SourceHCLFilePaths: args,
+		SourceStatePath:    statePath,
 	})
 }

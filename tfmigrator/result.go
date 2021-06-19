@@ -18,13 +18,13 @@ type MigratedResource struct {
 	// If Address is empty, the address isn't changed.
 	Address string
 	// Dirname is a directory path where Terraform Configuration file and State exists.
-	// TFFileBasename is a file name of Terraform Configuration.
+	// HCLFileBasename is a file name of Terraform Configuration.
 	// StateBasename is a file name of Terraform State.
 	// If Dirname and StateBasename is empty, the same State is updated.
-	// If Dirname and TFFileBasename is empty, the Terraform Configuration is updated in-place.
-	Dirname        string
-	TFFileBasename string
-	StateBasename  string
+	// If Dirname and HCLFileBasename is empty, the Terraform Configuration is updated in-place.
+	Dirname         string
+	HCLFileBasename string
+	StateBasename   string
 	// If Removed is true, the Resource is removed from Terraform Configuration and State.
 	Removed bool
 }
@@ -34,9 +34,9 @@ func (rsc *MigratedResource) StatePath() string {
 	return filepath.Join(rsc.Dirname, rsc.StateBasename)
 }
 
-// TFFilePath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
-func (rsc *MigratedResource) TFFilePath() string {
-	return filepath.Join(rsc.Dirname, rsc.TFFileBasename)
+// HCLFilePath returns a file path to the Terraform Configuration file where the migrated Configuration is written.
+func (rsc *MigratedResource) HCLFilePath() string {
+	return filepath.Join(rsc.Dirname, rsc.HCLFileBasename)
 }
 
 // HCLAddress returns a resource address like `resource.null_resource.foo`.

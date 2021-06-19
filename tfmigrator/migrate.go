@@ -28,11 +28,11 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 		return err
 	}
 
-	if src.TFFilePath == "" {
+	if src.HCLFilePath == "" {
 		return nil
 	}
 
-	return runner.MigrateTF(src, migratedResource)
+	return runner.MigrateHCL(src, migratedResource)
 }
 
 // MigrateState migrates Terraform State.
@@ -70,7 +70,7 @@ func (runner *Runner) appendFile(filePath string) (io.WriteCloser, error) {
 	if runner.DryRun {
 		return &nopWriteCloser{}, nil
 	}
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
 	if err != nil {
 		return nil, fmt.Errorf("create a file or append to the file: %w", err)
 	}
@@ -81,28 +81,28 @@ func (runner *Runner) mkdirAll(p string) error {
 	if runner.DryRun {
 		return nil
 	}
-	return os.MkdirAll(p, 0755) //nolint:wrapcheck
+	return os.MkdirAll(p, 0o755) //nolint:wrapcheck,gomnd
 }
 
-// MigrateTF migrate Terraform Configuration file.
-func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
+// MigrateHCL migrate Terraform Configuration file.
+func (runner *Runner) MigrateHCL(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
 	client := runner.HCLEdit
 	if migratedResource.Removed {
-		return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
+		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
-	tfFilePath := migratedResource.TFFilePath()
+	tfFilePath := migratedResource.HCLFilePath()
 	if tfFilePath == "" {
-		tfFilePath = src.TFFilePath
+		tfFilePath = src.HCLFilePath
 	}
 
 	if src.Address() != migratedResource.Address && migratedResource.Address != "" { //nolint:nestif
 		// address is changed and isn't empty
-		if src.TFFilePath == migratedResource.TFFilePath() || migratedResource.TFFilePath() == "" {
+		if src.HCLFilePath == migratedResource.HCLFilePath() || migratedResource.HCLFilePath() == "" {
 			// Terraform Configuration file path isn't changed.
-			filePath := migratedResource.TFFilePath()
+			filePath := migratedResource.HCLFilePath()
 			if filePath == "" {
-				filePath = src.TFFilePath
+				filePath = src.HCLFilePath
 			}
 			return client.MoveBlock(&hcledit.MoveBlockOpt{ //nolint:wrapcheck
 				From:     src.HCLAddress(),
@@ -114,7 +114,7 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		}
 		// Terraform Configuration file path is changed.
 		buf := &bytes.Buffer{}
-		if err := client.GetBlock(src.TFFilePath, "resource."+src.Address(), buf); err != nil {
+		if err := client.GetBlock(src.HCLFilePath, "resource."+src.Address(), buf); err != nil {
 			return err //nolint:wrapcheck
 		}
 
@@ -136,7 +136,7 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 		}); err != nil {
 			return err //nolint:wrapcheck
 		}
-		return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
+		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
 	if err := runner.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
@@ -148,8 +148,8 @@ func (runner *Runner) MigrateTF(src *Source, migratedResource *MigratedResource)
 	}
 	defer tfFile.Close()
 
-	if err := client.GetBlock(src.TFFilePath, "resource."+src.Address(), tfFile); err != nil {
+	if err := client.GetBlock(src.HCLFilePath, "resource."+src.Address(), tfFile); err != nil {
 		return err //nolint:wrapcheck
 	}
-	return client.RemoveBlock(src.TFFilePath, "resource."+src.Address()) //nolint:wrapcheck
+	return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 }

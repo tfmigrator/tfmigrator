@@ -84,8 +84,8 @@ type RunOpt struct {
 	// SourceStatePath is the file path to State.
 	// If SourceStatePath is empty, State is read by `terraform show -json` command.
 	SourceStatePath string
-	// SourceTFFilePaths is a list of Terraform Configuration file paths.
-	SourceTFFilePaths []string `validate:"required"`
+	// SourceHCLFilePaths is a list of Terraform Configuration file paths.
+	SourceHCLFilePaths []string `validate:"required"`
 }
 
 // Run reads Terraform Configuration and State and migrate them.
@@ -94,12 +94,12 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error { //nolint:fun
 		return fmt.Errorf("validate RunOpt: %w", err)
 	}
 
-	state, err := runner.StateReader.TFShow(ctx, opt.SourceStatePath)
+	state, err := runner.StateReader.Read(ctx, opt.SourceStatePath)
 	if err != nil {
 		return fmt.Errorf("read Terraform State: %w", err)
 	}
 
-	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceTFFilePaths...)
+	addressFileMap, err := runner.HCLEdit.ListBlockMaps(opt.SourceHCLFilePaths...)
 	if err != nil {
 		return fmt.Errorf("list all addresses in Terraform Configuration files: %w", err)
 	}
@@ -117,9 +117,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error { //nolint:fun
 	for _, rsc := range state.Values.RootModule.Resources {
 		tfFilePath := addressFileMap["resource."+rsc.Address]
 		src := &Source{
-			Resource:   rsc,
-			StatePath:  opt.SourceStatePath,
-			TFFilePath: tfFilePath,
+			Resource:    rsc,
+			StatePath:   opt.SourceStatePath,
+			HCLFilePath: tfFilePath,
 		}
 		migratedResource, err := runner.migrateResource(ctx, src)
 		if err != nil {
@@ -137,9 +137,9 @@ func (runner *Runner) Run(ctx context.Context, opt *RunOpt) error { //nolint:fun
 	for _, child := range state.Values.RootModule.ChildModules {
 		tfFilePath := addressFileMap[child.Address]
 		src := &Source{
-			Module:     child,
-			StatePath:  opt.SourceStatePath,
-			TFFilePath: tfFilePath,
+			Module:      child,
+			StatePath:   opt.SourceStatePath,
+			HCLFilePath: tfFilePath,
 		}
 		migratedResource, err := runner.migrateResource(ctx, src)
 		if err != nil {
