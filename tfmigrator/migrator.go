@@ -12,7 +12,7 @@ import (
 	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
-// Migrator provides high level API to migrate Terraform Configuration and State.
+// Migrator migrates Terraform Configuration and State.
 type Migrator struct {
 	Stdout       io.Writer        `validate:"required"`
 	HCLEdit      *hcledit.Client  `validate:"required"`

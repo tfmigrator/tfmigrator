@@ -2,12 +2,17 @@ package tfmigrator
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/hcledit"
 	tflog "github.com/tfmigrator/tfmigrator/tfmigrator/log"
+	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
 // QuickRun provides CLI interface to run tfmigrator quickly.
@@ -19,7 +24,7 @@ import (
 //   args - Terraform Configuration file paths
 // QuickRun is a simple helper function and is designed to implement CLI easily.
 // If you want to customize QuickRun, you can use other low level API like `Runner`.
-func QuickRun(ctx context.Context, planner Planner) error {
+func QuickRun(ctx context.Context, planner Planner) error { //nolint:funlen
 	logger := &tflog.SimpleLogger{}
 
 	var dryRun bool
@@ -56,14 +61,48 @@ Example
 		return fmt.Errorf("set the log level (%s): %w", logLevel, err)
 	}
 
-	runner := &Runner{
-		Logger:    logger,
-		DryRun:    dryRun,
-		Planner:   planner,
-		Outputter: NewYAMLOutputter(os.Stderr),
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get the current directory: %w", err)
 	}
-	if err := runner.SetDefault(); err != nil {
-		return err
+	tfCmdPath, err := exec.LookPath("terraform")
+	if err != nil {
+		return errors.New("the command `terraform` isn't found: %w")
+	}
+	tf, err := tfexec.NewTerraform(wd, tfCmdPath)
+	if err != nil {
+		return fmt.Errorf("initialize Terraform exec: %w", err)
+	}
+
+	editor := &hcledit.Client{
+		DryRun: dryRun,
+		Stderr: os.Stderr,
+		Logger: logger,
+	}
+
+	runner := &Runner{
+		Planner: planner,
+		Logger:  logger,
+		HCLEdit: editor,
+		StateReader: &tfstate.Reader{
+			Stderr:    os.Stderr,
+			Logger:    logger,
+			Terraform: tf,
+		},
+		Outputter: NewYAMLOutputter(os.Stderr),
+		Migrator: &Migrator{
+			Stdout:  os.Stdout,
+			DryRun:  dryRun,
+			HCLEdit: editor,
+			StateUpdater: &tfstate.Updater{
+				Stdout:    os.Stdout,
+				Stderr:    os.Stderr,
+				DryRun:    dryRun,
+				Logger:    logger,
+				Terraform: tf,
+			},
+		},
+		DryRun: dryRun,
 	}
 	if err := validate.Struct(runner); err != nil {
 		return fmt.Errorf("validate Runner: %w", err)
