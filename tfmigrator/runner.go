@@ -25,6 +25,7 @@ type Runner struct {
 	StateReader  *tfstate.Reader  `validate:"required"`
 	StateUpdater *tfstate.Updater `validate:"required"`
 	Outputter    Outputter
+	Migrator     *Migrator
 	DryRun       bool
 }
 
@@ -171,7 +172,7 @@ func (runner *Runner) migrateResource(ctx context.Context, source *Source) (*Mig
 		return nil, fmt.Errorf("plan to migrate a resource: %w", err)
 	}
 
-	if err := runner.Migrate(ctx, source, migratedResource); err != nil {
+	if err := runner.Migrator.Migrate(ctx, source, migratedResource); err != nil {
 		return nil, fmt.Errorf("migrate a resource: %w", err)
 	}
 	return migratedResource, nil

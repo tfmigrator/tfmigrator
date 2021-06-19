@@ -12,8 +12,16 @@ import (
 	"github.com/tfmigrator/tfmigrator/tfmigrator/tfstate"
 )
 
+// Migrator provides high level API to migrate Terraform Configuration and State.
+type Migrator struct {
+	Stdout       io.Writer        `validate:"required"`
+	HCLEdit      *hcledit.Client  `validate:"required"`
+	StateUpdater *tfstate.Updater `validate:"required"`
+	DryRun       bool
+}
+
 // Migrate migrates Terraform Configuration and State with `terraform state mv` and `hcledit`.
-func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
+func (migrator *Migrator) Migrate(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
 	if migratedResource == nil {
 		return nil
 	}
@@ -24,7 +32,7 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 		return fmt.Errorf("validate MigratedResource: %w", err)
 	}
 
-	if err := runner.MigrateState(ctx, src, migratedResource); err != nil {
+	if err := migrator.MigrateState(ctx, src, migratedResource); err != nil {
 		return err
 	}
 
@@ -32,11 +40,11 @@ func (runner *Runner) Migrate(ctx context.Context, src *Source, migratedResource
 		return nil
 	}
 
-	return runner.MigrateHCL(src, migratedResource)
+	return migrator.MigrateHCL(src, migratedResource)
 }
 
 // MigrateState migrates Terraform State.
-func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
+func (migrator *Migrator) MigrateState(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
 	// terraform state mv
 	newAddress := migratedResource.Address
 	if newAddress == "" {
@@ -44,7 +52,7 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 	}
 
 	if migratedResource.Removed {
-		if err := runner.StateUpdater.Remove(ctx, src.Address(), &tfstate.RemoveOpt{
+		if err := migrator.StateUpdater.Remove(ctx, src.Address(), &tfstate.RemoveOpt{
 			StatePath: src.StatePath,
 		}); err != nil {
 			return fmt.Errorf("remove state (%s, %s): %w", src.Address(), src.StatePath, err)
@@ -53,11 +61,11 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 	}
 	statePath := migratedResource.StatePath()
 	if statePath != "" {
-		if err := runner.mkdirAll(filepath.Dir(statePath)); err != nil {
+		if err := migrator.mkdirAll(filepath.Dir(statePath)); err != nil {
 			return fmt.Errorf("create parent directories of Terraform State %s: %w", statePath, err)
 		}
 	}
-	if err := runner.StateUpdater.Move(ctx, src.Address(), newAddress, &tfstate.MoveOpt{
+	if err := migrator.StateUpdater.Move(ctx, src.Address(), newAddress, &tfstate.MoveOpt{
 		StatePath: src.StatePath,
 		StateOut:  statePath,
 	}); err != nil {
@@ -66,8 +74,8 @@ func (runner *Runner) MigrateState(ctx context.Context, src *Source, migratedRes
 	return nil
 }
 
-func (runner *Runner) appendFile(filePath string) (io.WriteCloser, error) {
-	if runner.DryRun {
+func (migrator *Migrator) appendFile(filePath string) (io.WriteCloser, error) {
+	if migrator.DryRun {
 		return &nopWriteCloser{}, nil
 	}
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
@@ -77,16 +85,16 @@ func (runner *Runner) appendFile(filePath string) (io.WriteCloser, error) {
 	return f, nil
 }
 
-func (runner *Runner) mkdirAll(p string) error {
-	if runner.DryRun {
+func (migrator *Migrator) mkdirAll(p string) error {
+	if migrator.DryRun {
 		return nil
 	}
 	return os.MkdirAll(p, 0o755) //nolint:wrapcheck,gomnd
 }
 
 // MigrateHCL migrate Terraform Configuration file.
-func (runner *Runner) MigrateHCL(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
-	client := runner.HCLEdit
+func (migrator *Migrator) MigrateHCL(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
+	client := migrator.HCLEdit
 	if migratedResource.Removed {
 		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
@@ -109,7 +117,7 @@ func (runner *Runner) MigrateHCL(src *Source, migratedResource *MigratedResource
 				To:       migratedResource.HCLAddress(),
 				Update:   true,
 				FilePath: filePath,
-				Stdout:   runner.Stdout,
+				Stdout:   migrator.Stdout,
 			})
 		}
 		// Terraform Configuration file path is changed.
@@ -118,10 +126,10 @@ func (runner *Runner) MigrateHCL(src *Source, migratedResource *MigratedResource
 			return err //nolint:wrapcheck
 		}
 
-		if err := runner.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
+		if err := migrator.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
 			return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
 		}
-		tfFile, err := runner.appendFile(tfFilePath)
+		tfFile, err := migrator.appendFile(tfFilePath)
 		if err != nil {
 			return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
 		}
@@ -139,10 +147,10 @@ func (runner *Runner) MigrateHCL(src *Source, migratedResource *MigratedResource
 		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
-	if err := runner.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
+	if err := migrator.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
 		return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
 	}
-	tfFile, err := runner.appendFile(tfFilePath)
+	tfFile, err := migrator.appendFile(tfFilePath)
 	if err != nil {
 		return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
 	}
