@@ -95,6 +95,19 @@ func (migrator *Migrator) mkdirAll(p string) error {
 	return os.MkdirAll(p, 0o755) //nolint:wrapcheck,gomnd
 }
 
+func (migrator *Migrator) getHCLFilePath(src *Source, migratedResource *MigratedResource) string {
+	if migratedResource.Dirname == "" && migratedResource.HCLFileBasename == "" {
+		return src.HCLFilePath
+	}
+	if migratedResource.Dirname != "" && migratedResource.HCLFileBasename != "" {
+		return filepath.Join(migratedResource.Dirname, migratedResource.HCLFileBasename)
+	}
+	if migratedResource.Dirname == "" {
+		return migratedResource.HCLFileBasename
+	}
+	return filepath.Join(migratedResource.Dirname, filepath.Base(src.HCLFilePath))
+}
+
 // MigrateHCL migrate Terraform Configuration file.
 func (migrator *Migrator) MigrateHCL(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
 	if migratedResource.SkipHCLMigration {
@@ -105,10 +118,7 @@ func (migrator *Migrator) MigrateHCL(src *Source, migratedResource *MigratedReso
 		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
-	tfFilePath := migratedResource.HCLFilePath()
-	if tfFilePath == "" {
-		tfFilePath = src.HCLFilePath
-	}
+	hclFilePath := migrator.getHCLFilePath(src, migratedResource)
 
 	if src.Address() != migratedResource.Address && migratedResource.Address != "" { //nolint:nestif
 		// address is changed and isn't empty
@@ -132,37 +142,37 @@ func (migrator *Migrator) MigrateHCL(src *Source, migratedResource *MigratedReso
 			return err //nolint:wrapcheck
 		}
 
-		if err := migrator.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
-			return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
+		if err := migrator.mkdirAll(filepath.Dir(hclFilePath)); err != nil {
+			return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", hclFilePath, err)
 		}
-		tfFile, err := migrator.appendFile(tfFilePath)
+		hclFile, err := migrator.appendFile(hclFilePath)
 		if err != nil {
-			return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
+			return fmt.Errorf("open a file which will write Terraform configuration %s: %w", hclFilePath, err)
 		}
-		defer tfFile.Close()
+		defer hclFile.Close()
 
 		if err := client.MoveBlock(&hcledit.MoveBlockOpt{
 			From:     src.HCLAddress(),
 			To:       migratedResource.HCLAddress(),
 			FilePath: "-",
 			Stdin:    buf,
-			Stdout:   tfFile,
+			Stdout:   hclFile,
 		}); err != nil {
 			return err //nolint:wrapcheck
 		}
 		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
 	}
 
-	if err := migrator.mkdirAll(filepath.Dir(tfFilePath)); err != nil {
-		return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", tfFilePath, err)
+	if err := migrator.mkdirAll(filepath.Dir(hclFilePath)); err != nil {
+		return fmt.Errorf("create parent directories of Terraform Configuration file %s: %w", hclFilePath, err)
 	}
-	tfFile, err := migrator.appendFile(tfFilePath)
+	hclFile, err := migrator.appendFile(hclFilePath)
 	if err != nil {
-		return fmt.Errorf("open a file which will write Terraform configuration %s: %w", tfFilePath, err)
+		return fmt.Errorf("open a file which will write Terraform configuration %s: %w", hclFilePath, err)
 	}
-	defer tfFile.Close()
+	defer hclFile.Close()
 
-	if err := client.GetBlock(src.HCLFilePath, "resource."+src.Address(), tfFile); err != nil {
+	if err := client.GetBlock(src.HCLFilePath, "resource."+src.Address(), hclFile); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck
