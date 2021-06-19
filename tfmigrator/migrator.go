@@ -46,6 +46,9 @@ func (migrator *Migrator) Migrate(ctx context.Context, src *Source, migratedReso
 // MigrateState migrates Terraform State.
 func (migrator *Migrator) MigrateState(ctx context.Context, src *Source, migratedResource *MigratedResource) error {
 	// terraform state mv
+	if migratedResource.SkipStateMigration {
+		return nil
+	}
 	newAddress := migratedResource.Address
 	if newAddress == "" {
 		newAddress = src.Address()
@@ -94,6 +97,9 @@ func (migrator *Migrator) mkdirAll(p string) error {
 
 // MigrateHCL migrate Terraform Configuration file.
 func (migrator *Migrator) MigrateHCL(src *Source, migratedResource *MigratedResource) error { //nolint:cyclop,funlen
+	if migratedResource.SkipHCLMigration {
+		return nil
+	}
 	client := migrator.HCLEdit
 	if migratedResource.Removed {
 		return client.RemoveBlock(src.HCLFilePath, "resource."+src.Address()) //nolint:wrapcheck

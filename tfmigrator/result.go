@@ -26,7 +26,9 @@ type MigratedResource struct {
 	HCLFileBasename string
 	StateBasename   string
 	// If Removed is true, the Resource is removed from Terraform Configuration and State.
-	Removed bool
+	Removed            bool
+	SkipHCLMigration   bool
+	SkipStateMigration bool
 }
 
 // StatePath returns a file path to Terraform State file.
