@@ -37,6 +37,9 @@ func (client *Client) ListBlockMap(filePath string) (map[string]struct{}, error)
 		if line == "" {
 			continue
 		}
+		if !strings.HasPrefix(line, "resource.") && !strings.HasPrefix(line, "module.") {
+			continue
+		}
 		if _, ok := m[line]; ok {
 			return nil, errors.New("resource address is duplicated: " + line)
 		}
