@@ -52,30 +52,11 @@ About the detail of [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrato
 so if we use [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun), we don't have to know about other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
 But if we need low level API, please check other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
 
-## Compared with suzuki-shunsuke/tfmigrator
+## Check tfmigrator/cli too
 
-This is a Go package. On the other hand, [suzuki-shunsuke/tfmigrator](https://github.com/suzuki-shunsuke/tfmigrator) is CLI tool.
+We have implemented CLI with this framework.
 
-Originally we have been developing suzuki-shunsuke/tfmigrator before this package.
-In suzuki-shunsuke/tfmigrator, we define rules for migration with YAML, Go's [text/template](https://golang.org/pkg/text/template/), and [expr](https://github.com/antonmedv/expr).
-So we don't have to write code with Go.
-
-But when we migrate many resources, it is hard to write the configuration file.
-So we started to develop tfmigrator as Go package instead of suzuki-shunsuke/tfmigrator.
-
-Using this package, we can implement the migration rules with Go freely.
-By implementing the interface [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner), we can migrate resources.
-This is very simple and powerful and flexible.
-And we don't have to learn the configuration file format and expr's Language specification, so the learning cost is low.
-Using [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun) function, we can implement CLI for migration quickly.
-
-And compared with suzuki-shunsuke/tfmigrator v1.0.0, this package provides rich feature.
-
-* Support to remove Resource
-* Support to update Terraform Configuration files in place
-* Don't have to install [hcledit](https://github.com/minamijoyo/hcledit) command
-* Support the migration of Module address
-* etc
+https://github.com/tfmigrator/cli
 
 ## Release Note (Change log)
 
