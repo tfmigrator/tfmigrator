@@ -115,7 +115,6 @@ github.com/hashicorp/golang-lru v0.5.1 h1:0hERBMJE1eitiLkihrMvRVBYAkpHzc/J3QdDN+
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/hashicorp/hcl/v2 v2.9.0/go.mod h1:FwWsfWEjyV/CMj8s/gqAuiviY72rJ1/oayI9WftqcKg=
 github.com/hashicorp/hcl/v2 v2.10.1 h1:h4Xx4fsrRE26ohAk/1iGF/JBqRQbyUqu5Lvj60U54ys=
 github.com/hashicorp/hcl/v2 v2.10.1/go.mod h1:FwWsfWEjyV/CMj8s/gqAuiviY72rJ1/oayI9WftqcKg=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
@@ -157,8 +156,8 @@ github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaO
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
-github.com/minamijoyo/hcledit v0.2.1 h1:AH5lnAHuJOEjOFeEW3/v9GIBq6sa5E17xjDGRy5p64I=
-github.com/minamijoyo/hcledit v0.2.1/go.mod h1:n/Is2+1cM1/jfKAMxiRe99rdYxI6c0vDbYGcPZxNiZg=
+github.com/minamijoyo/hcledit v0.2.2 h1:jKqPtO4DMsthRZ/FwajjmwHNG5JwlXYH57xddwm7NDE=
+github.com/minamijoyo/hcledit v0.2.2/go.mod h1:X6JwawSRMcu1b+/fi+1oJRJA/BzdQ1doPb4EJPob5ek=
 github.com/mitchellh/cli v1.1.2/go.mod h1:6iaV0fGdElS6dPBx0EApTxHrcWvmJphyh2n8YBLPPZ4=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
