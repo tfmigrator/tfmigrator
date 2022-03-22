@@ -8,7 +8,7 @@
 
 Go library to migrate Terraform Configuration and State with `terraform state mv` and `terraform state rm` command and [hcledit](https://github.com/minamijoyo/hcledit).
 
-Using tfmigrator, we can do the following.
+Using tfmigrator, you can do the following.
 
 * migrate resource address
   * e.g. `null_resource.foo` => `null_resource.bar`
@@ -45,12 +45,12 @@ https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator
 ## Getting Started
 
 [The example](https://github.com/tfmigrator/tfmigrator/blob/main/examples/example1/main.go) and [README](https://github.com/tfmigrator/tfmigrator/tree/main/examples/example1) tell us how to use tfmigrator and how tfmigrator works.
-We can implement a command for migration with Go simply.
+You can implement a command for migration with Go simply.
 About the detail of [Planner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Planner), please see the document of [Source](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Source) and [MigratedResource](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#MigratedResource).
 
 [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun) provides a high level API,
-so if we use [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun), we don't have to know about other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
-But if we need low level API, please check other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
+so if you use [QuickRun](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#QuickRun), you don't have to know about other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
+But if you need low level API, please check other API like [Runner](https://pkg.go.dev/github.com/tfmigrator/tfmigrator/tfmigrator#Runner).
 
 ## Check tfmigrator/cli too
 
