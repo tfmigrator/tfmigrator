@@ -30,7 +30,6 @@ resource "null_resource" "foo" {}`),
 		Stderr: os.Stderr,
 	}
 	for _, d := range data { //nolint:paralleltest
-		d := d
 		t.Run(d.title, func(t *testing.T) {
 			stdout := &bytes.Buffer{}
 			d.opt.Stdout = stdout

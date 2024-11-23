@@ -24,5 +24,5 @@ func (cplanner *combinedPlanner) Plan(src *Source) (*MigratedResource, error) {
 		}
 		return migratedResource, nil
 	}
-	return nil, nil
+	return nil, nil //nolint:nilnil
 }

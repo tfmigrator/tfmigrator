@@ -7,9 +7,9 @@ import (
 
 // Logger is a logger.
 type Logger interface {
-	Info(string)
-	Debug(string)
-	SetLogLevel(string) error
+	Info(msg string)
+	Debug(msg string)
+	SetLogLevel(level string) error
 }
 
 // SimpleLogger is a logger using the standard "log" package.
