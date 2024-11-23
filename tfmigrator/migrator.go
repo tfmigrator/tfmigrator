@@ -81,7 +81,7 @@ func (migrator *Migrator) appendFile(filePath string) (io.WriteCloser, error) {
 	if migrator.DryRun {
 		return &nopWriteCloser{}, nil
 	}
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:mnd
 	if err != nil {
 		return nil, fmt.Errorf("create a file or append to the file: %w", err)
 	}
@@ -92,7 +92,7 @@ func (migrator *Migrator) mkdirAll(p string) error {
 	if migrator.DryRun {
 		return nil
 	}
-	return os.MkdirAll(p, 0o755) //nolint:wrapcheck,gomnd
+	return os.MkdirAll(p, 0o755) //nolint:wrapcheck,mnd
 }
 
 func (migrator *Migrator) getHCLFilePath(src *Source, migratedResource *MigratedResource) string {

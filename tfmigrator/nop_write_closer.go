@@ -8,6 +8,6 @@ func (wc *nopWriteCloser) Close() error {
 	return nil
 }
 
-func (wc *nopWriteCloser) Write(p []byte) (n int, err error) {
+func (wc *nopWriteCloser) Write(p []byte) (int, error) {
 	return io.Discard.Write(p) //nolint:wrapcheck
 }

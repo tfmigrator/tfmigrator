@@ -47,11 +47,13 @@ func parseArgs() *cliArgs {
 
 // QuickRun provides CLI interface to run tfmigrator quickly.
 // `flag` package is used.
-//   -help
-//   -dry-run
-//   -log-level
-//   -state - source state file path
-//   args - Terraform Configuration file paths
+//
+//	-help
+//	-dry-run
+//	-log-level
+//	-state - source state file path
+//	args - Terraform Configuration file paths
+//
 // QuickRun is a simple helper function and is designed to implement CLI easily.
 // If you want to customize QuickRun, you can use other low level API like `Runner`.
 func QuickRun(ctx context.Context, planner Planner) error {

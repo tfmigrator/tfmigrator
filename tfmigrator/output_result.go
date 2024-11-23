@@ -9,7 +9,7 @@ import (
 
 // Outputter outputs the result.
 type Outputter interface {
-	Output([]Result) error
+	Output(results []Result) error
 }
 
 // YAMLOutputter outputs the result with YAML format.

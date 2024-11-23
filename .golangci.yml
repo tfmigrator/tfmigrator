@@ -2,15 +2,15 @@
 linters:
   enable-all: true
   disable:
-  - maligned # WARN [runner] The linter 'maligned' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  Replaced by govet 'fieldalignment'. 
-  - interfacer # WARN [runner] The linter 'interfacer' is deprecated (since v1.38.0) due to: The repository of the linter has been archived by the owner.  
-  - scopelint # WARN [runner] The linter 'scopelint' is deprecated (since v1.39.0) due to: The repository of the linter has been deprecated by the owner.  Replaced by exportloopref.
-  - wsl
-  - goerr113
-  - lll
-  - godot
-  - nlreturn
-  - godox
-  - golint
-  - tagliatelle
-  - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
+    - wsl
+    - err113
+    - lll
+    - godot
+    - nlreturn
+    - godox
+    - tagliatelle
+    - exportloopref # WARN The linter 'exportloopref' is deprecated (since v1.60.2) due to: Since Go1.22 (loopvar) this linter is no longer relevant. Replaced by copyloopvar. 
+    - exhaustruct
+    - depguard
+    - varnamelen
+    - ireturn
