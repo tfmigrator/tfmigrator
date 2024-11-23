@@ -1,0 +1,15 @@
+---
+name: test
+on: pull_request
+jobs:
+  test:
+    uses: suzuki-shunsuke/go-test-full-workflow/.github/workflows/test.yaml@c37f3fa8a1dc979f7c4152ea0850eef1cbad7c2f # v1.1.1
+    with:
+      aqua_version: v2.38.0
+      go-version-file: go.mod
+    secrets:
+      gh_app_id: ${{secrets.APP_ID}}
+      gh_app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+    permissions:
+      pull-requests: write
+      contents: read
